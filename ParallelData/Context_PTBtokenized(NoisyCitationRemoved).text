@@ -1,0 +1,470 @@
+
+Ethnic diversity appears to distinguish different groups with regard to prevalence Asian populations have the highest prevalence rates with reports ranging from 50-90 4-5 
+Despite many decades of research little is known about the precise molecular defects and abnormal biochemical pathways that result in myopia Compelling data from familial aggregation and twin stud 
+Despite many decades of research little is known about the precise molecular defects and abnormal biochemical pathways that result in myopia Compelling data from familial aggregation and twin stud 
+Significant linkage was not found on 18p and 12q 
+cal myopia have reported significant linkage to regions on chromosome 18p11 31 12q21-23 17q21-22 and 7q36 16-19 Mutti et al 21 examined the hypothesis that families with milder juvenile onset myopia might show linkage to these same candidate regions 
+Significant linkage was not found on 18p and 12q Statistically significant LOD linkage was not demonstrated although multipoint LOD over 2.0 was observed thus giving evide 
+
+Statistically significant LOD linkage was not demonstrated although multipoint LOD over 2.0 was observed thus giving evidence of confirmation of the 18p candidate region 
+Finally experimental findings from animal studies show that the refracti 
+
+offspring and parents and between pairs of siblings to lie between 0.07-0 36 29-32 First they have reduced genetic complexity 
+l-defined founder population with large families and well-documented genealogies 34-35 
+This population also has somewhat larger family sizes than average in the US In this initial report we describe the design of our study and show that two regions 18p and 12q previously reported 
+This program was also used to estimate allele frequencies at marker loci from the unrelated founder individuals in the families Parametric two-point linkage analysis was performed with the MLINK pr 
+denotes the dot product of the arguments 
+
+
+The DCR pseudoinverse architecture allows one to use inputs as memo 
+This procedure ensures that when sending the 
+
+This stopping condition ensures that the reconstructed vector gives rise to an internal represe 
+
+
+
+
+Both the multilayer perceptron method and 
+Both the multilayer perceptron method and PCA feature slow learning tuning properties 
+
+
+Both the multilayer perceptron method and PCA feature slow learning tuning properties 14 
+Both the multilayer perceptron method and PCA feature slow learning tuning properties 14 
+The ART network is fast learning architecture using external behavioural feedback via the vigilance parameter and it quickly memorises or replaces memories if the input and the reconstructed inpu 
+ans of the internal long-term memory system and the matching procedure gives rise to the selection of the appropriate winning unit 
+
+between the input and the memories and only one neuron stays active 
+The main difference between the local PCA method and the present architecture is both in the purpose and in the training method 
+
+
+
+If one considers how simple and fast the tuni 
+the network becomes feedforward network and the pseudoinverse approach includes this option 
+
+
+
+A similar note is that that preprocessing stage that inputs dissimilar activations to the DCR net is strongly recommended 
+If one considers how simple and fast the tuni 
+holding bit valued inputs were formed by NIST and these bit valued inputs used as memories are capable of dealing with gray scale inputs Consider for example mixed analog and digital VLSI chips 18 20 that utilise bit valued memories for each connection in an analog networ 
+
+In the Kohonen network prewired local connections called neighbor connections exist among the competing neural units These connections define the topology of the network 
+between members of different categories as being larger i.e they look more different between category expansion 
+This is even more so when considering the dynamic contrast enhancement properties of the DCR scheme 
+DSPN models extend Generalized Stochastic Petri Nets and Stochastic Reward Nets allowing for the exact modeling of events having deterministic occurrence times 
+This limitation is introduced because the DEEM sol 
+
+This limitation is introduced because the DEEM sol 
+
+
+
+
+
+
+
+
+
+
+
+
+
+Block Based Simulation Language 
+GPL Based Simulation Languages GPLBSL 
+
+
+
+
+
+
+
+Within the realm of design there are more recent traditions with similarities to the strategy we suggest here 
+Other projects are less focused on communication in the traditional sense and instead experiment with the creation of what could be called expressive environments 
+
+FIASCO Glitch and other projects working with the legacy 
+For one wastes space and time Both Lefebvre and the Situationists had clear eye for the creative and un-functional aspects of everyday life 
+We use the term to denote the process which separates different expressive behaviors and contexts from each other 
+They mainly oper 
+
+French philosopher Henri Lefebvre argues that urban space is never stable or fixed Building on Lefebvre we emphasize the continuous and participative character of both the everyday and social friction 
+One might say that social friction is the constant actualisation of difference which produces repository of energy that in turn will alter and drive social and cultural phenomena forward in often 
+Actually the very articulation of social friction might prove maneuver that can bind them togethe 
+
+They wanted people to take action and break down defining structures and conve 
+desks and proliferate into the physical environment 
+data sample and the corresponding filter coefficient are simultaneously applied to each multiplier This architecture presents the same complexity 
+This architecture presents the same complexity as the direct form but it involves multiplying all the coefficients by the same input data Because the registers are now between the adders most of 
+
+on that uses the least number of taps that allow the desired filter accuracy 
+taps and coefficient bit-width corresponding to the least power consumption implementation of the FIR filter We then enter loop that starts with the minimum bit-width for the coefficients BWmin and successively increase it truncating 
+
+The power results presented were obtained using the switch-level simulator SLS 
+terpretation and development by the teacher for particular applications Wisconsin Policy Research Institute Report 2001 
+
+Direct instruction is advocated by the American Federations of Teachers 1998 as one of six promising research-based schoolwide reform European Associati 
+
+
+
+
+
+The didactic perspective common to the three aforementioned research traditions involves direct and explicit instructional attention to the acquisition of complex concepts skills and learning str 
+Activating Instruction The course entitled Direct and Activating Instruction was developed primarily on the basis of the direct instruction model as described by Rosenhine and Stevens 1986 see also Rosenshine 2002 RRB Brophy and Good 1986 and Good and Brophy 2000 and further supplemented with forms of scaffolding derived from the cognitive strategy instruction literature Pressley Wolyshyn 1995 
+
+
+
+
+
+
+
+
+
+
+
+peatedly re-joins the network under new identities to avoid the penalty imposed on free-riders There are two ways to counter whitewashing attacks 
+
+
+
+However imposing penalties on free-riders require some means of identifying free-riders and distinguishing them from contributors 
+
+
+
+However imposing penalties on free-riders require some means of identifying free-riders and distinguishing them from contributors 
+
+
+
+2.1 Previous Work Motion planning has been extensively studied in the literature for more than three decades 
+Vleugels and Overmars 21 presented spatial subdivision algorith 
+
+The pairwise convex Minkowski sums are convex 3.3 Our Approach Our algorithm for computing the Minkowski sum is based on the decomposition property 
+presented an efficient algorithm for polygonal robot among polygonal obstacles with 3-dof configuration space Sacks 16 presented practical configuration space computation algorithm for pairs of curved planar parts 
+This approach provides the additional property that the obtained paths maximize the clearance between the robot and the obstacles Unlike approaches surveyed earlier this method does not make any assumptions about the configuration space and is complete path planning algorithm that runs in single exponential time in the conf 
+
+the two polyhedra and compute pairwise Minkowski sums between the convex pieces 
+
+One common approach for computing Minkowski sum of general poly 
+
+algorithm for polygonal objects was also developed by Avnaim and Boissonant Sacks 16 presented practical configuration space computation algorithm for pairs of curved planar parts Aronov and Shari 
+These approaches can be resolution complete if the resolution parameters are selected properly but not exact or complete 
+
+Many of them are based on computing the Minkowski difference and the exact representation of C-obstacle region 15 A similar algorithm for polygonal objects was also developed by Avnaim and Boissonant 
+7.3 Tangential Contact The sampling algorithm presented earlier uses an octree to perform the 
+
+Roadmaps The idea underlying this approach is to convert the path planning problem in k-dimensional configuration space to path planning in network of 1dimensional curves maintaining the connectivit 
+
+
+
+Kedem and Sharir 12 presented an efficient algorithm for polygonal robot among polygonal obstacles with 3-dof configuration space 
+an efficient algorithm for polygonal robot among polygonal obstacles with 3-dof configuration space A similar algorithm for polygonal objects was also developed by Avnaim and Boissonant 
+7.3 Tangential Contact The sampling algorithm presented earlier uses an octree to perform the 
+Motion Planning Algorithms for 2D and 3D Robots Different exact algorithms have been proposed for complete motion planning of 2D and 3D robots 
+
+7.4 Limitations Our sampling algorithm uses two criteria complex cell test and star-shaped test to guide the subdivision These criteria are conservative 
+
+Intuitively the complex cell criterion ensures that the surface intersects the grid cell in simple manner in most cases 
+ar-shaped w.r.t the cell see Figs 
+
+This approach provides the additional property that the obtained paths maximize the clearance between the robot and the obstacles 
+
+
+The other papers more or less describe that they have done simulation study without trying to generalize their results 
+The system uses three different spatial represent-tations suggested in Harrison 
+
+hitectures based on human cognition for certain high-level control mechanisms aboard Robonaut These cognitive architectures are Harrison and Schunn 2003 based upon the ACT-R architecture Anderson and Lebiere 1998 RRB and Polyscheme Cassimatis 2002 
+The system uses three different spatial represent-tations suggested in Harrison and Schunn 2003 
+ion with humans and while performing tasks 
+
+ain high-level control mechanisms aboard Robonaut These cognitive architectures are Harrison and Schunn 2003 based upon the ACT-R architecture Anderson and Lebiere 1998 and Polyscheme Cassimatis 2002 RRB 
+
+Although there has been considerable research on the linguistics of spatial language for humans there has been only 
+We are investigating the use of two cognitive architectures based on human cognition for certain high-level control mechanisms aboard Robonaut These cognitive architectures are Harrison and Schunn 2003 RRB based upon the ACT-R architecture Anderson and Lebiere 1998 and Polyscheme Cassimatis 2002 
+
+The results of this study will be used to enhance the multimodal interface by establishing common language for spatial referencing which incorporates those constructs and utterances most frequent 
+The system uses three different spatial represent-tations suggested in Harrison and Schunn 2003 
+The inclusion of cognitively plausible representations and processes incorporated into the robot provides further basis for facilitating collaboration between humans and robots thereby reducing 
+We are also extending the capabilities of the cognitive architectures both and Polyscheme and their perspective-taking cognitive models 
+We are investigating the use of two cognitive architectures based on human cognition for cer 
+
+
+
+
+
+
+The topic-based design is relevant for survey questionnaires that gather data about all household members from single household respondent 
+
+
+The topic-based design is relevant for survey questionnaires that gather data about all household members from single household respondent A topic-based interview completes one topic for all per 
+A great many of the SIPP interview process improvements would not have been feasible without the computerization of the survey instrument This paper briefly summarizes many of the technology-based 
+-8 sWith regard to their ability to guide and support satisfying social interaction computerized survey questionnaires carry both problems and potential 
+
+
+
+
+
+and support satisfying social interaction computerized survey questionnaires carry both problems and potential 
+
+This section reviews experimental work linking questionnaire design and survey cooperation The topic-based design is relevant for surve 
+This section reviews experimental work linking questionnaire design and survey cooperation 
+But there is little in the published literature beyond occasional tricks of the trade e.g put sensitive 
+Thus the computerization of survey questionnaires presents new opportunities for improving the interactional aspects of survey interview 
+
+
+
+
+
+
+Force Automation Solutions Industry experts estimate that many mobile Sales Force Automation SFA applications fail to deliver real return on investment Current wireless access solutions force users to navigate complex application menus and memorize difficult commands Combine these limitations with the small sc 
+Rather than taking the time to learn how to navigate through extensive menus only to be forced to sit through multiple screen refreshes users simply ask for what they want in one ste 
+
+
+
+
+The resulting dimension NPCA must be chosen such that only the relevant dimensions i.e with sufficiently high corresponding singular values are kept 
+
+
+
+This was done in such way that the three measurements for the same grip were kept together Similarity scores 13 were computed for all the data in the training and in the test set 
+
+This was done in such way that the three measurements for the same grip were kept together Similarity scores 13 were computed for all the data in the training and in the test set For each user the similarity sco 
+
+
+ction between Lorentz transformation and the relativistic Doppler effect will be discussed in the next Section 
+
+
+
+
+
+
+lativistic Doppler effect the null result of the Michelson-Morley experiment has been taken as experimental proof for the validity of the Lorentz transformation 
+
+
+
+
+This example demonstrates how differential association rules can provid 
+
+Graph-based ARM does not typically consider more than one label on each node or edge 
+Edge and node relations are joined through natural join operation   Attribute names are changed 11 such that they are unique 
+For network comparison purposes we need three entities to derive 2-node rules 
+
+
+These approaches are very flexible and leave most choices up to the user 
+Joined-relation basis sets are formed in multiple steps Edge and node relations are joined through natural join operation   
+
+
+From the rule we can see that these two domains physically interact but are never represented by single gene This supports the observation that the ATP binding domain is found in many other prote 
+
+Attributes within this model are allowed to be set-valued thereby violating first normal form 
+The set was filtered to reflect only ORFs contained in our node relation 
+Graph-based ARM does not typically consider more than one label on each node or edge 
+Genetic interactions are derived from in-vivo experiments in which the lethality associated with mutation of two genes is tested 26 
+These approaches are very flexible and leave most choices up to the user 
+
+These approaches are very flexible and leave most choices up to the user 
+denton Ajay Yekkirala Biology Dept North Dakota State University Fargo North Dakota 58105 ajay Two genes in one species are labeled as interacting if they have homologs in another species and those homologs are exons of the same gene Previous approaches to network comparison have studied eac 
+The gene orf node relation represents gene annotation data 
+Graph-based ARM does not typically consider more than one label on each node or edge 
+
+
+Table Join item sets for TID and have repetitious items This work notes the problem of what we term repetitious item sets but does not resolve it 
+The authors in 27 address aspects such as density of the networks and how well the genetic interactions predict physical interactions These approaches fal 
+
+
+We use differential association rule mining techniques to identify rules that directly contrast the differences in annotations across interactions and between different types of interactions 
+Another work 23 looks at correlation and interdependency characteristics between the genetic and physical networks Graph-based ARM does not typically consider more than 
+A protein located in the mitochondria would not have localization cytoplasm Comparison with 25 further helped us confirm some less expected rules 
+denton Ajay Yekkirala Biology Dept North Dakota St 
+We use differential association rule mining techniques to identify rules that directly contrast the differences in annotations across interactions and between different types of interactions 
+
+Some biological publications have touched on the concept of comparing networks Another work 23 looks at correlation and interdependency characteristics between 
+Our third edge relation was the domain fusion set built from the unfiltered results posted from 28 14 
+Table shows that even the statistical properties of the networks differ significantly the average number of interactions of proteins that show at least one interaction varies from 3.55 in the phy 
+
+Genetic interactions are derived from in-vivo experiments in which the lethality associated with mutation of two genes is tested 26 
+Graph-based ARM does not typically consider more than one label on each node or edge 
+
+
+
+
+outing the OP channel selection policy depends also on the state of the router i.e the occupancy of various VCs causing increased router complexity and higher router delays 
+2.3 Modeling Router Delay In this section we describe router delay model for the virtual cut-though deterministic and adaptive routers 
+
+In the reduction in queuing delay for worm-hole routing is taken into account and the compar 
+
+outing the OP channel selection policy depends also on the state of the router i.e the occupancy of various VCs causing increased router complexity and higher router delays 
+2.3 Modeling Router Delay In this section we describe router delay model for the virtual cut-though deterministic and adaptive routers 
+Note that this relationship includes the delivery port Delay equations for the routers are derived using the above parameters The three main operations delays prevalent in all of the routers simulated here are as fol 
+In the reduction in queuing delay for worm-hole routing is taken into account and the compar 
+sage is routed along decreasing dimensions with dimension decrease occurring only when zero hops remain in all higher dimensions Deterministic routing can su er from congestion since only single path between source and destination can be used 
+
+For simplicity all message lengths are equal 
+
+
+
+Since the adaptive algorithm has been proven deadlock free the hybrid is also deadlock free 3.2 Pipelined Implementations The Pipelined Hybrid Router PHR implementation is shown in Figure 
+
+2.3 Modeling Router Delay In this section we describe router delay model for the virtual cut-though deterministic and adaptive routers 
+
+In the reduction in queuing delay for worm-hole routing is taken into account and the compar 
+
+The router supports shortcut for messages that conti 
+
+
+
+However the exibility of adaptive routing provides smaller queuing delays and much higher saturation point 
+
+The router supports shortcut for messages that continue traveling in the same dimension and uses directionorder routing for its deterministic routing algorithm 
+A company following these standards should aim to identify the processes along 
+
+Role Attributes The attributes associated with role has variously been discussed in Chen96 Lupu98 
+Questions are also raised to challenge the commonly accepted concept of role hierarchy This is done with the aim of exposing the need to balance practical role-based concepts with interesting theor 
+
+
+
+
+certain conditions within the pre-defined scope These conditions constitute the constrains that are separate from the RBAC policy constraints From this poin 
+Encapsulation decisions can be used to control which roles are exported outside the imm 
+
+
+
+A company following these standards should aim to identify the processes along with those roles that are responsible for each stage in the process The software procedures will 
+This treatment will subsume the requirements mentioned in this section provided that the way policies are described is sufficiently generic with descriptive power at least as encompassing as that 
+
+
+However the focus has been on combining measurements from sensors radars laser range-finders etc individually capable of estimating the target state position velocity etc 
+Thrun et al have also contributed significant research to these areas 5,6 However our work distinguishes itself from traditional data fusion techniques in that the sensors themselves are active 
+Thrun et al have also contributed significant research to these areas 5,6 However our work distinguishes itself from traditional data fusion techniques in that the sensors themselves are active 
+This yielded significant improvements to methods used in mobile robot navigation localization and mapping 3,4 However our work distinguishes itself from traditional data fusion techniques in that the sensors themselves are actively managed to improve the quality of the measurements obtained prior to the da 
+This yielded significant improvements to methods used in mobile robot navigation localization and mapping 3,4 However our work distinguishes itself from traditional data fusion techniques in that the sensors themselves are actively managed to improve the quality of the measurements obtained prior to the da 
+There has been other related research under the heading of sensor networks This research focused on the movement of sensor networks while ensuring optima 
+
+
+
+
+
+
+
+
+
+
+
+Two algorithms were investigated for this maximization approach 
+they can serve as inputs to traditional Bayesian filters i.e Kalman or particle which yield estimates of the target pose For the arbitrary sensor placement problem general visibility constraints range occlusions etc can also be accommodated by 32smerely eliminating the corresponding triples from the feasible set 
+
+
+CRYSTAL was learning-based IE system that took parsed annotated sentences and found patterns for extraction in novel sentences 
+It took user-defined feature set together with set of hand tagged training documents and learned rules for extraction 
+It took user-defined feature set together with set of hand tagged training documents and learned rules for extraction 
+ning documents and learned rules for extraction 
+Hannes and Tom describe WebL and then show its usage by implementing meta-search engine that combines search results from 
+DiPasquo argued that there was inherent information in the layout of each page 
+The markup algebra extracts structured and unstructured values from pages for computation and is based on algebraic operations on sets of markup elements 
+A typical wrapper application extracts the data from Web pages that are generated based on predefined HTML templates The systems generate delimiter-based rules that use linguistic constraints 
+The systems generate delimiter-based rules that use linguistic constraints Wien uses only delimiters that immediately precede and follow the actual data 
+
+In their approach the Kullback-Leibler KL divergence is used for measuring the similarity between kernel matrices Assuming that the kernel matrix is random positive definite matrix following 
+Crammer et al 2003 cast the kernel matrix learning problem under the boosting paradigm for constructing an accurate kernel from simple base kernels 
+
+Wong algorithm can work on distributions over random variables or random vectors instead of random matrices 
+
+
+
+
+by the Research Grants Council of the Hong Kong Special Administrative Region under grants and Test set accuracies obtained from the classification experiments the highest values are shown in 
+Crammer et al 2003 cast the kernel matrix learning problem under the boosting paradigm fo 
+
+
+The Tanner-Wong algorithm consists of the Imputation step I-step and the Posterior step Pstep 
+
+
+
+A Simplified Bayesian Model for Kernel Matrix Learning A major practical problem with the method presented in the previous section is its high computational requirements since the Tanner-Wong 
+To compare it with some existing kernel classification methods based on the input kernel A we also implement kernel Fisher discriminant analysis KFDA support vector machine SVM and KNM 
+
+
+
+
+
+
+
+
+
+
+From the passive audience of the linear storytelling to the nearl 
+
+
+
+But this completeness pro 
+
+see Delbean and Schachermayer 1996 The well-known Galtchouk-Kunita-Watanabe projection theorem see Ansel and Stricker 1993 delivers characterization of an arbitrary contingent claim H with respect to given equivalent martin 
+
+see Delbean and Schachermayer 1996 The well-known Galtchouk-Kunita-Watanabe projection theorem see Ansel and Stricker 1993 delivers characterization of an arbitrary contingent claim H with respect to given equivalent martin 
+
+
+
+
+One such criterion is the mean-variance hedging approach which was first proposed by F llmer and Sondermann 1986 RRB and was extended by Bouleau and Lamberton 1989 Schweizer 1994 and Schweizer 1996 see Schweizer 2001 for an overview 
+
+the expected quadratic tracking error between given contingent claim and the value process of self-financing strategy at the terminal date Gouri roux Laurent and Pham 1998 and independently Rheinl nder and Schweizer 1997 RRB solve the general mean-variance hedging problem when the risky assets price process is continuous semimartingale 
+
+
+One such criterion is the mean-variance hedging approach which was first proposed by F llmer and Sondermann 1986 and was extended by Bouleau and Lamberton 1989 Schweizer 1994 and Schwei zer 1996 see Schweizer 2001 for an overview 
+One such criterion is the mean-variance hedging approach which was first proposed by F llmer and Sondermann 1986 and was extended by Bouleau and Lamberton 1989 Schweizer 1994 and Schweizer 1996 see Schwei zer 2001 for an overview 
+
+The idea is that the UI-specific constructs 
+ates are built use case model representing all user types and all possible use and these are basis for the tests SIS PRUEBA allows two types of exp 
+
+naged by both speech recognition and more traditional DTMF commands 
+The idea is that the UI-specific constructs can be reused and the development proces 
+
+In the past several years numerous algorithms and techniques have been proposed and explored for quickly determining native conformations based on models such as the HP models 
+The standard assumption has been that the lattice is square in structure 
+The degrees of freedom directions for 2D impose more computational requirements given the larger conformation 
+However it has been noted that square or 90-degree angles have serious issues and drawbacks including the part 
+The standard assumption has been that the lattice is square in structure 
+computational protein models even the simplified models suffer from computational intractability in the worst case In the past several years numerous algorithms and techniques have been proposed and explored for quickly determining native conformations based on models such as 
+Therefore several models have been presented for the protein folding problem 
+However it has been noted that square or 90-degree angles have serious issues and drawbacks including the particularly serious parity constraint i.e any pair 
+numerous algorithms and techniques have been proposed and explored for quickly determining native conformations based on models such as the HP models 
+
+Table 5.1 contains the HPs used in our experiments 
+Protein ID21-31 are from 10 Average absolute energy value imp 
+For an ASN both the data fusion and the control parts must be decentralized and scalable 
+
+
+
+A tree network created and maintained by the DDF algorithm is suitable for transmitting such command messages as well 
+
+Several classification systems for human-robot interactions have been suggested 
+Both data fusion and control part of the algorithm are centralized 
+
+All software components run as separate applications and communicate with 
+
+
+
+data fusion and made control decision but it is not fully decentralized and human-robot issues are not addressed Both data fusion and control part of the algorithm are centralized Decentralized control techniques are combined with 
+They fall outside of the scope of this work because they do not perform network-level data fusion and typically do not interact with humans 
+They fall outside of the scope of this work because they do not perform network-level data fusion and typically do not interact with humans 
+
+
+Several classification systems for human-robot interactions have been suggested 
+Both data fusion and control part of the algorithm are centralized Decentralized control techniques are combined with DDF in 
+
+
+
+
+
+BDDs in general are an efficient data structure for representation and manipulation of Boolean functions 
+tors and mutations for permutation problems are used For the crossover operators two parents are selected by the method described above Notice that simple exchange of the parts between the cut positions as often applied to binary encoded EA problems is not possible since this would often produce invalid solutions 
+Construct the children by choosing the part between the cut positions from one parent and preserve the absolute position and order of as many variables as possible from the second parent Construct the children by choosing the part between the cut position from one parent and preserve the relative position and order of as many 
+This strategy guarantees that the best element never gets lost and fast convergence is obtained 
+tors and mutations for permutation problems are used For the crossover operators two parents are selected by the method described above Notice that simple exchange of the parts between the cut positions as often applied to binary encoded EA problems is not possible since this would often produce invalid solutions 
+
+
+
+They are working on explicit representations of the cubes and therefore are only applicable to small instances of the problem 
+BDDs in general are an efficient data structure for representation and manipulation of Boolean functions 
+
+
+
+Each time randomly chosen seed for the random number generator was used show the minimal and maximal DSOP of all test runs respectively 
+The machine was running under Linux Control programs for the experiments were written in Python The experimental results show the quality of the proposed evolutionary method The experiments are 
+tors and mutations for permutation problems are used For the crossover operators two parents are selected by the method described above Notice that simple exchange of the parts between the cut positions as often applied to binary encoded EA problems is not possible since this would often produce invalid solutions 
+
+tors and mutations for permutation problems are used For the crossover operators two parents are selected by the method described above Noti
