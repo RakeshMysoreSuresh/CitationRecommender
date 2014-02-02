@@ -4,9 +4,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.sql.Ref;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ public class RefRec {
 	String[] recommendations = new String[MAX_RECOM];
 	public static final int MAX_RECOM = 100;
 	int[] titleVCBMap;
+	
 			
 	public RefRec(){
 		try {
@@ -78,7 +81,7 @@ public class RefRec {
 		ref.rankPapers(query);
 	}
 
-	public void rankPapers(String query) throws ClassNotFoundException, IOException {
+	public int[] rankPapers(String query) throws ClassNotFoundException, IOException {
 		//storeDataStruct("", "ContextStop.vcb");	
 		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
 		TokenStream tokenStream = analyzer.tokenStream("query", new StringReader(query));
@@ -109,19 +112,23 @@ public class RefRec {
 			}
 			bucket(paper, prob[paper]);			
 		}
+		 int[] recoIDS1 = new int[MAX_RECOM];
 		recommend();
-		System.out.println("Time for "+table.titles.size()+" paper= "+
+		PrintWriter printer = new PrintWriter(new FileWriter("Citation Recommendation report.txt"));
+		printer.println("Time for "+table.titles.size()+" paper= "+
 		(System.currentTimeMillis()-currTime));
 		
-		System.out.println("Recommendations: IDs");
+		printer.println("Recommendations: IDs");
 		for (int i = 0; i < MAX_RECOM; i++) {
-			System.out.print(recommendedIds[i] + " ");
+			recoIDS1[i] = recommendedIds[i];
+			printer.print(recommendedIds[i] + " ");
 		}
-		System.out.println("");
+		printer.println("");
 		for (int i = 0; i < MAX_RECOM; i++) {
-			System.out.println(i + ". " + recommendations[i]+": "+prob[recommendedIds[i]]);
+			printer.println(i + ". " + recommendations[i]+": "+prob[recommendedIds[i]]);
 		}
-		
+				
+		return recoIDS1;
 	}
 	
 	private void recommend() {
