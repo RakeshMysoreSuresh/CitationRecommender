@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -37,12 +37,12 @@ import org.apache.lucene.util.Version;
  * 	                             it can be excluded from the aggressive preprocessing step and chosen to be added to
  * 	                             the bag of words later.
  * 5. Fertility(OPTIONAL): The constant MAX_FERTILITY can be modified as required
- * 
- * Outputs: Each line in this 
+ *
+ * Outputs: Each line in this
  * 1. Bag of words file
  */
 public class BagOfWordsGenv2 {
-	
+
 	private static BufferedReader idReader;
 	private static BufferedReader contextReader;
 	private static BufferedReader properNounReader;
@@ -54,23 +54,23 @@ public class BagOfWordsGenv2 {
 	private HashMap<String, Integer> titlesMap;
 	private int ignored = 0;
 	static final int MAX_FERTILITY = 20;
-	static final double LOWERBOUND = 1/MAX_FERTILITY; 
+	static final double LOWERBOUND = 1/MAX_FERTILITY;
 
 	public BagOfWordsGenv2(String[] args) throws IOException {
-		
+
 		if(args.length != 5){
 			usage();
 		}
-		
+
 		idReader = new BufferedReader(new FileReader(args[0]));
 		titleReader = new BufferedReader(new FileReader(args[1]));
 		contextReader = new BufferedReader(new FileReader(args[2]));
-		
+
 		// Buffered Writers
 		wordsWriter = new PrintWriter(new FileWriter(args[3]));
 		titleWriter = new PrintWriter(new FileWriter(args[4]));
 	}
-	
+
 	public BagOfWordsGenv2(String[] args, String properNounFile) throws IOException {
 		this(args);
 		properNounReader = new BufferedReader(new FileReader(properNounFile));
@@ -85,21 +85,21 @@ public class BagOfWordsGenv2 {
 			ClassNotFoundException {
 
 		BagOfWordsGenv2 parallel = new BagOfWordsGenv2(new String[]
-				{"ID.txt", "Title.txt", "Context.txt", "BagOfWordsPOSTag.txt", 
-						"CitedPapersPOSTag.txt"});
+				{"ID", "Title", "Context", "BagOfWords",
+						"CitedPapers"});
 		parallel.generate();
 
 	}
 	/**
 	 * Gather all words from all citation contexts in a given citing paper and write into a line
-	 * Gather all title IDs(numbers) of all cited paperds from a given citing paper and write into a line 
+	 * Gather all title IDs(numbers) of all cited paperds from a given citing paper and write into a line
 	 * @throws IOException
 	 */
 	public void generate() throws IOException {
 		int numCitation = 0;
 		String curPaperId, context, title, noun;
 		String previousId = "";
-		
+
 		//Dummy reads to exclude the column name
 		curPaperId = idReader.readLine(); // read the column name
 		context = contextReader.readLine(); // read the column name
@@ -132,17 +132,26 @@ public class BagOfWordsGenv2 {
 					// write citedPaperIds to a file
 					writeToFile(bagOfWords, wordsWriter);
 				}
-				
+
 				// Read one citation context and get bag of words
 				context = contextReader.readLine();
 				// Initialize Sets to read the new Paper citations
 				bagOfWords.clear();
-				context = context.substring(context.indexOf(' '), context.lastIndexOf(' '));
-				removeStopWordsStem(context);
-				if(properNounReader!=null){
-					noun = properNounReader.readLine();
-					bagOfWords.addAll(Arrays.asList(noun.split(" ")));
-				}	
+				int firstDelimiterIndex = context.indexOf(' ');
+				int lastDelimiterIndex  = context.lastIndexOf(' ');
+				if (firstDelimiterIndex > -1 && lastDelimiterIndex > -1) {
+					context = context.substring(firstDelimiterIndex,
+							lastDelimiterIndex);
+					removeStopWordsStem(context);
+					if (properNounReader != null) {
+						noun = properNounReader.readLine();
+						bagOfWords.addAll(Arrays.asList(noun.split(" ")));
+					}
+				}
+				else
+				{
+					System.out.println("Ignoring: "+context);
+				}
 			}
 
 			previousId = curPaperId;
@@ -158,7 +167,7 @@ public class BagOfWordsGenv2 {
 
 		wordsWriter.close();
 	}
-	
+
 	private static void writeToFile(Set<String> bagOfWords, PrintWriter writer) {
 
 		Iterator<String> it = bagOfWords.iterator();
@@ -168,7 +177,7 @@ public class BagOfWordsGenv2 {
 		}
 		writer.println(write);
 	}
-	
+
 	private void usage() {
 
 		System.out.println("<ID file> <Title> <Raw Contexts> <Output BagofWords filename> <Output CitedPaperID>");
@@ -177,7 +186,7 @@ public class BagOfWordsGenv2 {
 
 	private void writeToFile() {
 		double fertility = bagOfWords.size()/citedPaperIds.size();
-		
+
 		if (!((fertility>MAX_FERTILITY)||(fertility<LOWERBOUND))) {
 			Iterator<String> it = bagOfWords.iterator();
 			String write = "";
@@ -196,10 +205,10 @@ public class BagOfWordsGenv2 {
 			ignored++;
 		}
 	}
-	
+
 	public void removeStopWordsStem(String input) throws IOException {
 		// input string
-		Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version 
+		Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version
 		Analyzer analyzer = new StandardAnalyzer(matchVersion); // or any other analyzer
 		TokenStream tokenStream = analyzer.tokenStream("test",
 				new StringReader(input));
@@ -214,12 +223,12 @@ public class BagOfWordsGenv2 {
 		while (tokenStream.incrementToken()) {
 			bagOfWords.add(token.toString());
 		}
-		
+
 		tokenStream.end();
 		tokenStream.close();
 		analyzer.close();
 	}
-	
+
 /*	private void readTitleMap() throws ClassNotFoundException, IOException {
 
 		FileInputStream fin = new FileInputStream("Map.ser");

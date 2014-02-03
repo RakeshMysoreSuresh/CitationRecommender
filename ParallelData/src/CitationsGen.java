@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,31 +26,37 @@ public class CitationsGen {
 	private Set<Integer> citedPaperIds = new HashSet<>();
 	private ArrayList<String> titleList = new ArrayList<>();
 	int[] titleVCBMap = new int[600000];
-	
+
 	@SuppressWarnings("unchecked")
 	CitationsGen() throws IOException, ClassNotFoundException{
-		idReader = new BufferedReader(new FileReader("ID.txt"));
-		titleReader = new BufferedReader(new FileReader("Title.txt"));
-		//titleWriter = new PrintWriter(new FileWriter("CitedPapers.txt"));
-		ObjectInputStream obj = new ObjectInputStream(new FileInputStream("Map.ser"));
+		idReader = new BufferedReader(new FileReader("ID"));
+		titleReader = new BufferedReader(new FileReader("Title"));
+		titleWriter = new PrintWriter(new FileWriter("CitedPapers"));
+		ObjectInputStream obj;
+		File map = new File("Map.ser");
+		if (!map.exists())
+		{
+			storeMap(map);
+		}
+		obj = new ObjectInputStream(new FileInputStream(map));
 		titlesMap = ((HashMap<String, Integer>) obj.readObject());
 		obj.close();
 	}
 
 	/**
 	 * @param args
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
 		CitationsGen cit = new CitationsGen();
-		//cit.storeMap();
-		cit.storeTitleVCB("CitedPapers.vcb");
-		
+		//cit.storeTitleVCB("CitedPapers.vcb");
+		cit.generate();
+
 	}
-	
+
 	void generate() throws IOException {
 		int numCitation = 0;
-		String curPaperId, context;
+		String curPaperId;
 		String previousId = "", title;
 
 		curPaperId = idReader.readLine(); // read the column name
@@ -59,7 +66,7 @@ public class CitationsGen {
 		int percentage=0;
 		while ((curPaperId = idReader.readLine()) != null) {
 			numCitation++;
-			
+
 			if (0 == numCitation%12000) {
 				endTime = System.currentTimeMillis();
 				System.out.println("Time taken for "+(++percentage)+"% = "
@@ -79,34 +86,35 @@ public class CitationsGen {
 			else {
 				if (citedPaperIds.size() !=0) {
 					// write bagsOfWords to a file
-					// write citedPaperIds to a file 
+					// write citedPaperIds to a file
 					writeToFile();
 				}
 				// Initialize Sets to read the new Paper citations
 				citedPaperIds.clear();
-				// Read corresponding paper title, fetch correspoding ID
+				// Read corresponding paper title, fetch corresponding ID
 				title = titleReader.readLine();
 				int citedPaperId = titlesMap.get(title);
 				citedPaperIds.add(citedPaperId);
 			}
 			previousId = curPaperId;
 		}
-		
+
 		// Write the last set of values
 		if (citedPaperIds !=null) {
 			// write bagsOfWords to a file
-			// write citedPaperIds to a file 
+			// write citedPaperIds to a file
 			writeToFile();
 		}
 		titleWriter.close();
-		
+
 	}
-	
+
 	private void writeToFile() {
-		String write=null;
 		Iterator<Integer> it2 = citedPaperIds.iterator();
+		String write= it2.next().toString();
 		while(it2.hasNext()){
-			write = write +" "+it2.next();
+			Integer nextCited = it2.next();
+			write = write +" "+ nextCited;
 		}
 		titleWriter.println(write);
 	}
@@ -114,12 +122,12 @@ public class CitationsGen {
 	private void readTitleMap() throws ClassNotFoundException, IOException {
 
 		FileInputStream fin = new FileInputStream("Map.ser");
-		ObjectInputStream ois = new ObjectInputStream(fin);
-		titlesMap = (HashMap<String, Integer>) ois.readObject();
-		
+//		ObjectInputStream ois = new ObjectInputStream(fin);
+//		titlesMap = (HashMap<String, Integer>) ois.readObject();
+
 	}
-	
-	private void storeMap() throws IOException{
+
+	private void storeMap(File mapFile) throws IOException{
 		HashMap<String, Integer> map = new HashMap<>();
 		String title = null;
 		int count = 0;
@@ -130,13 +138,13 @@ public class CitationsGen {
 				titleList.add(title);
 			}
 		}
-		ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream("Map.ser"));
+		ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(mapFile));
 		stream.writeObject(map);
-		stream = new ObjectOutputStream(new FileOutputStream("TitleList.ser"));
-		stream.writeObject(titleList);
+		//stream = new ObjectOutputStream(new FileOutputStream("TitleList.ser"));
+		//stream.writeObject(titleList);
 		stream.close();
 	}
-	
+
 	void storeTitleVCB(String fileName) throws Exception{
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
@@ -145,7 +153,7 @@ public class CitationsGen {
 		r.readLine();
 		while((s=r.readLine())!=null){
 			spl = s.split(" ");
-			int index = Integer.parseInt(spl[0]), 
+			int index = Integer.parseInt(spl[0]),
 					val = Integer.parseInt(spl[1]);
 			titleVCBMap[index] = val;
 		}
@@ -153,6 +161,6 @@ public class CitationsGen {
 		ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream("VCBTitleBridge.ser"));
 		stream.writeObject(titleVCBMap);
 		stream.close();
-		
+
 	}
 }
