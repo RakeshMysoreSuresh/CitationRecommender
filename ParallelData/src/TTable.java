@@ -17,17 +17,28 @@ import java.util.HashSet;
 import org.omg.CORBA.OMGVMCID;
 
 
-public class TTable implements Serializable{
+public class TTable extends Config implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -9002172753555230584L;
 	ArrayList<HashMap<Integer, Double>> table;
 	HashSet<Integer> titles = new HashSet<>();
-	
+
+	public TTable()
+	{
+		try {
+			storeTT();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	public TTable readTransTable(String fileName) throws IOException, ClassNotFoundException {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		ObjectInputStream in = new ObjectInputStream(new FileInputStream("TTable.ser"));
 		return (TTable)in.readObject();
-		
 	}
 	
 	public static int findNumWords(String fileName) throws IOException{
@@ -42,37 +53,44 @@ public class TTable implements Serializable{
 		int num = Integer.parseInt(temp.split(" ")[0]);
 		System.out.println(num);
 		return num;
-		
-		
 	}
 	
-	public void storeTT(String fileName) throws IOException {
-		BufferedReader r = new BufferedReader(new FileReader(fileName));
-		int numWords = findNumWords(fileName);
-		table = new ArrayList<HashMap<Integer, Double>>();
-		for(int i=0; i<numWords+100; i++){
-			table.add(new HashMap<Integer, Double>());
-		}
-		String s;
-		String[] spl;
-		HashMap<Integer, Double> currWordMap = null;
-		int prevWordId = -1;
-		while((s = r.readLine())!=null){
-			spl = s.split(" ");
-			int wordId = Integer.parseInt(spl[0]);
-			;
-			Integer titleId = Integer.parseInt(spl[1]);
-			Double tValue = Double.parseDouble(spl[2]);
-			if(wordId != prevWordId){
-				currWordMap = table.get(wordId);			
+	public void storeTT() throws IOException {
+		
+		File ttFile = new File(TRANSLATION_TABLE_SER);
+		if(!ttFile.exists())
+		{
+			TTable.compressTTable(TRANSLATION_TABLE_TXT);
+			String fileName = TRANSLATION_TABLE_TXT + TTABLE_COMPRESSED_SUFFIX;
+			
+			BufferedReader r = new BufferedReader(new FileReader(fileName));
+			int numWords = findNumWords(fileName);
+			table = new ArrayList<HashMap<Integer, Double>>();
+			for(int i=0; i<numWords+100; i++){
+				table.add(new HashMap<Integer, Double>());
 			}
-			titles.add(titleId);
-			currWordMap.put(titleId, tValue);
-			prevWordId = wordId;
+			String s;
+			String[] spl;
+			HashMap<Integer, Double> currWordMap = null;
+			int prevWordId = -1;
+			while((s = r.readLine())!=null){
+				spl = s.split(" ");
+				int wordId = Integer.parseInt(spl[0]);
+				;
+				Integer titleId = Integer.parseInt(spl[1]);
+				Double tValue = Double.parseDouble(spl[2]);
+				if(wordId != prevWordId){
+					currWordMap = table.get(wordId);			
+				}
+				titles.add(titleId);
+				currWordMap.put(titleId, tValue);
+				prevWordId = wordId;
+			}
+			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(TRANSLATION_TABLE_SER));
+			out.writeObject(this);
+			r.close();
+			out.close();
 		}
-		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("TTable.ser2"));
-		out.writeObject(this);
-		r.close();
 	}
 	
 	double getTValue(int wordId, int paperId){
@@ -87,7 +105,7 @@ public class TTable implements Serializable{
 		//System.out.println(findNumWords("Test4(1-10-0-1-1-0).final"));
 		//new TTable().storeTT("Test4(1-10-0-1-1-0).final");
 		System.out.println(findNumWords("C:\\Tests\\Test (111)\\113-06-26.103203.rakesh.t3.final"));
-		new TTable().storeTT("C:\\Tests\\Test (111)\\113-06-26.103203.rakesh.t3.finalcompressed");
+		new TTable().storeTT();
 		//compressTTable("C:\\Tests\\Test (111)\\113-06-26.103203.rakesh.t3.final");
 	}
 	
@@ -101,6 +119,7 @@ public class TTable implements Serializable{
 				w.println(entry);
 			}
 		}
-		
+		w.close();
+		r.close();
 	}
 }

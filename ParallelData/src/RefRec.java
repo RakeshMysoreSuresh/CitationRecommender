@@ -35,7 +35,7 @@ import org.apache.lucene.util.Version;
  *
  */
 
-public class RefRec {
+public class RefRec extends Config{
 	
 	static final int numContexts = 1200000;
 	ContextFreq[] contextFreq;
@@ -91,11 +91,11 @@ public class RefRec {
 			String word = token.toString(); 
 			Integer temp = wordsToID.get(word);
 			if (temp!=null) {
-				Integer occrces;
-				if ((occrces = queryTokens.get(temp)) == null) {
+				Integer occurrences;
+				if ((occurrences = queryTokens.get(temp)) == null) {
 					queryTokens.put(temp, 1);
 				} else {
-					queryTokens.put(temp, occrces + 1);
+					queryTokens.put(temp, occurrences + 1);
 				}
 			}
 		}
@@ -146,8 +146,7 @@ public class RefRec {
 			Collections.sort(curList,paperComparator);
 			for(int j =0;j<curList.size(); j++){
 				recommendedIds[numRec] = curList.get(j);
-				recommendations[numRec] = titleList.get(
-						titleVCBMap[curList.get(j)]);
+				recommendations[numRec] = titleList.get(titleVCBMap[curList.get(j)]);
 				numRec++;
 				if(numRec>MAX_RECOM-1)
 					return;
@@ -201,23 +200,23 @@ public class RefRec {
 	}
 	
 	ContextFreq[] readICF() throws ClassNotFoundException, IOException{
-		return (ContextFreq[])new ObjectInputStream(new FileInputStream("ICFArray.ser")).readObject();
+		return (ContextFreq[])new ObjectInputStream(new FileInputStream(ICF_ARRAY)).readObject();
 	}
 	
 	HashMap<String, Integer> readWordsToID() throws ClassNotFoundException, IOException{
-		return (HashMap<String, Integer>)new ObjectInputStream(new FileInputStream("WordsToID.ser")).readObject();
+		return (HashMap<String, Integer>)new ObjectInputStream(new FileInputStream(WORDS2ID_LIST)).readObject();
 	}
 	
 	TTable readTTable() throws ClassNotFoundException, IOException{
-		return (TTable)new ObjectInputStream(new FileInputStream("TTable.ser2")).readObject();
+		return (TTable)new ObjectInputStream(new FileInputStream(TRANSLATION_TABLE_SER)).readObject();
 	}
 	
 	ArrayList<String> readTitleList() throws ClassNotFoundException, IOException{
-		return (ArrayList<String>)new ObjectInputStream(new FileInputStream("TitleList.ser")).readObject();
+		return (ArrayList<String>)new ObjectInputStream(new FileInputStream(TITLE_LIST)).readObject();
 	}
 	
 	int[] readVCBTitleBridge() throws ClassNotFoundException, IOException{
-		return (int[])new ObjectInputStream(new FileInputStream("VCBTitleBridge.ser")).readObject();
+		return (int[])new ObjectInputStream(new FileInputStream(CITED_VCB_PAPER_ID_TO_TITLE_SER_MAP)).readObject();
 	}
 	
 	void testQueryTokenization() throws IOException{

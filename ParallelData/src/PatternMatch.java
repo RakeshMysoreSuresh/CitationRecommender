@@ -3,15 +3,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import com.ibm.icu.text.Normalizer;
 
-import edu.illinois.cs.cogcomp.lbj.pos.POSTagger;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.process.CoreLabelTokenFactory;
@@ -28,7 +25,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
  * citation context. The Maximum Entropy(Maxent) tagger is used to tag the words with their parts of speech.
  *
  */
-public class PatternMatch {
+public class PatternMatch extends Config{
 	
 	//Options for the Penn Tree Bank tokenizer
 	private static final String OPTIONS = "invertible = true," +
@@ -49,63 +46,29 @@ public class PatternMatch {
 	private static final String SPLCHARPATTERN = MULTSPLCHARPATTERN+"|"+TRAILSPLCHARPATTERN;
 	private static final String REMOVEPATTERN = DIACRITICPATTERN+"|"+EMAILPATTERN+"|"+SPLCHARPATTERN+"|"+MATHVARPATTERN;
 	//private static final String PROPERNOUNPATTERN = "((?<=\\s)
-	private static final MaxentTagger tagger = new MaxentTagger("models/english-left3words-distsim.tagger");
+	private static final MaxentTagger tagger = new MaxentTagger(POS_TAG_MODELS_DIR + POS_TAG_MODEL);
 
 	/**
-	 * @param args
-	 * @throws Exception 
-	 */
-	public static void main(String[] args) throws Exception {
-
-		//clean();	 
-        //System.out.println(REMOVEPATTERN);
-		test();
-	}
-
-	public static void test() throws IOException {
-		TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
-		        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
-//		PrintWriter pw = new PrintWriter(new FileWriter("Context_OtherPOS.txt"));
-//		PrintWriter propNounWriter = new PrintWriter(new FileWriter("Context_ProperNouns.txt"));
-		PrintWriter pw = new PrintWriter(System.out);
-		String s = "al representation a, which is equivalent to a solution of the overdetermined equation. Qa = x (5) and according to our goals we have a projection method, since y may be expressed as y = Q(QTQ) �1 QT=-=x (6) a-=-nd the combination of the Q matrices P = Q(Q T Q) �1 Q T features the property P 2 = P, and thus forms a projector matrix. In short, we have designed a relaxing dynamical equation that utilises thre";	
-		process(ptbTokenizerFactory, s, pw, pw);
-		pw.close();
-		//propNounWriter.close();
-	}
-
-	/**
-	 *  Assumed that the citation contexts are in the file named "Context.txt".
+	 *  
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
 	public static void clean(String otherPoSFile, String properNounFile) throws FileNotFoundException, IOException {
 		TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
 		        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
-		BufferedReader r = new BufferedReader(new FileReader("Context.txt"));
-		//StringReader r = new StringReader("ï¿½ï¿½Â¤Â£ and ï¿½ï¿½ï¿½ï¿½ï¿½ &quot;play$%&&ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[sgsds]&quot; C# 1-R are positive constants-=-=. Hence user benefit is an increasing function of the number of contributors, but with diminishing returnsâa form widely accepted in this context (see, e.g., [2], [3], [15]). Thus, the performance of the system, denoted by ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ , is defined as the difference between the average benefit received by all users (including both contributors and free-riders) an");
-	    //PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out, "utf-8"));
-		//PrintWriter pw = new PrintWriter(new FileWriter("Context_PTBtokenized(NoisyCitationRemoved).text"));
+		BufferedReader r = new BufferedReader(new FileReader(CONTEXT));
 		PrintWriter pw = new PrintWriter(new FileWriter(otherPoSFile));
 		PrintWriter propNounWriter = new PrintWriter(new FileWriter(properNounFile));
 	    String s;
 	    s = r.readLine();
 		while ((s=r.readLine())!=null) {
-			process(ptbTokenizerFactory, s, pw,propNounWriter);
+			process(ptbTokenizerFactory, s, pw, propNounWriter);
 			pw.println("");
 			propNounWriter.println("");
 		}
 		r.close();
 	}
-	/**
-	 * 
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 */
-	public static void clean() throws FileNotFoundException, IOException {
-		clean("Context_OtherPOS.txt", "Context_ProperNouns.txt");
-	}
-	
+
 	/**
 	 * 
 	 * @param ptbTokenizerFactory
@@ -162,7 +125,54 @@ public class PatternMatch {
 		return false;
 	}
 /****************************Rough work*************************
- * //		System.out.println(new String("1\\/2"));
+ * 
+ * 
+
+public static void clean(String otherPoSFile, String properNounFile) throws FileNotFoundException, IOException {
+		TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
+		        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
+		BufferedReader r = new BufferedReader(new FileReader(Config.CONTEXT));
+		//StringReader r = new StringReader("ï¿½ï¿½Â¤Â£ and ï¿½ï¿½ï¿½ï¿½ï¿½ &quot;play$%&&ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[sgsds]&quot; C# 1-R are positive constants-=-=. Hence user benefit is an increasing function of the number of contributors, but with diminishing returnsâa form widely accepted in this context (see, e.g., [2], [3], [15]). Thus, the performance of the system, denoted by ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ , is defined as the difference between the average benefit received by all users (including both contributors and free-riders) an");
+	    //PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out, "utf-8"));
+		//PrintWriter pw = new PrintWriter(new FileWriter("Context_PTBtokenized(NoisyCitationRemoved).text"));
+		PrintWriter pw = new PrintWriter(new FileWriter(otherPoSFile));
+		PrintWriter propNounWriter = new PrintWriter(new FileWriter(properNounFile));
+	    String s;
+	    s = r.readLine();
+		while ((s=r.readLine())!=null) {
+			process(ptbTokenizerFactory, s, pw, propNounWriter);
+			pw.println("");
+			propNounWriter.println("");
+		}
+		r.close();
+	}
+
+
+	public static void test() throws IOException {
+		TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
+		        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
+//		PrintWriter pw = new PrintWriter(new FileWriter("Context_OtherPOS.txt"));
+//		PrintWriter propNounWriter = new PrintWriter(new FileWriter("Context_ProperNouns.txt"));
+		PrintWriter pw = new PrintWriter(System.out);
+		String s = "al representation a, which is equivalent to a solution of the overdetermined equation. Qa = x (5) and according to our goals we have a projection method, since y may be expressed as y = Q(QTQ) �1 QT=-=x (6) a-=-nd the combination of the Q matrices P = Q(Q T Q) �1 Q T features the property P 2 = P, and thus forms a projector matrix. In short, we have designed a relaxing dynamical equation that utilises thre";	
+		process(ptbTokenizerFactory, s, pw, pw);
+		pw.close();
+		//propNounWriter.close();
+	}
+
+	public static void main(String[] args) throws Exception {
+
+		clean();	 
+        //System.out.println(REMOVEPATTERN);
+		test();
+	}
+	
+	
+	public static void cleanAndContexts() throws FileNotFoundException, IOException {
+		clean(, "Context_ProperNouns.txt");
+	}
+
+
 //		System.out.println(new String("1\\/2").matches("(.*[\\\\][/].*)|((\\-...\\-))"));
 //		System.out.println(new String("-LLR-").matches("([0-9][\\\\][/][0-9])|((\\-.+\\-))"));
 //		System.out.println(new String("&quot; C# 1-R are positive constants=--.").replaceAll("([^a-zA-Z0-9\\s][^a-zA-Z0-9\\s]+)", ""));
