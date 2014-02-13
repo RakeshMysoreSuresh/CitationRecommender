@@ -47,6 +47,9 @@ public class PatternMatch extends Config{
 	private static final String REMOVEPATTERN = DIACRITICPATTERN+"|"+EMAILPATTERN+"|"+SPLCHARPATTERN+"|"+MATHVARPATTERN;
 	//private static final String PROPERNOUNPATTERN = "((?<=\\s)
 	private static final MaxentTagger tagger = new MaxentTagger(POS_TAG_MODELS_DIR + POS_TAG_MODEL);
+	
+	private TokenizerFactory<CoreLabel> ptbTokenizerFactory = PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
+	StringBuffer otherPOSBuffer, properNounBuffer;
 
 	/**
 	 *  
@@ -108,6 +111,51 @@ public class PatternMatch extends Config{
 				else{
 					pw.print((word.split("_"))[0]);
 					pw.print(" ");
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 
+	 * @param ptbTokenizerFactory
+	 * @param s
+	 * @param pw
+	 * @param propNounWriter
+	 * @throws IOException
+	 */
+	public void preProcessQuery(String s) throws IOException {
+		otherPOSBuffer = new StringBuffer(s.length());
+		properNounBuffer = new StringBuffer(s.length() >> 1);
+		DocumentPreprocessor documentPreprocessor = new DocumentPreprocessor(new StringReader(s));
+		documentPreprocessor.setTokenizerFactory(ptbTokenizerFactory);
+		for (List<HasWord> sentence : documentPreprocessor) {
+			StringBuilder builder = new StringBuilder(200);
+			for (HasWord word : sentence) {
+				String w = word.toString();
+				if (w.length() > 1 || w.matches("[A-Z]+")) {
+					if (!w.matches(EXCLUDEPATTERN)) {
+						builder.append(word);
+						builder.append(" ");
+					}
+				}
+			}
+			String ptbTokenizedString = builder.toString();
+			String regexCleaned = ptbTokenizedString.replaceAll(
+					REMOVEPATTERN, "");
+			//pw.print(regexCleaned);
+			//System.out.println(regexCleaned);
+			String tagged = tagger.tagString(regexCleaned);
+			for(String word : tagged.split(" ")){
+				if (word != null) {
+					if (word.endsWith("_NNP") || word.endsWith("_NNPS")) {
+						properNounBuffer.append((word.split("_"))[0]);
+						;
+						properNounBuffer.append(" ");
+					} else {
+						otherPOSBuffer.append((word.split("_"))[0]);
+						otherPOSBuffer.append(" ");
+					}
 				}
 			}
 		}

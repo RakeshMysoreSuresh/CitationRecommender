@@ -167,24 +167,6 @@ public class CitationsGen extends Config{
 			obj.close();
 		}
 	}
-
-	void storeTitleVCB(String fileName) throws Exception{
-		BufferedReader r = new BufferedReader(new FileReader(fileName));
-		String s;
-		String[] spl;
-		//To remove null
-		r.readLine();
-		while((s=r.readLine())!=null){
-			spl = s.split(" ");
-			int index = Integer.parseInt(spl[0]),
-					val = Integer.parseInt(spl[1]);
-			titleVCBMap[index] = val;
-		}
-		r.close();
-		ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(CITED_VCB_PAPER_ID_TO_TITLE_SER_MAP));
-		stream.writeObject(titleVCBMap);
-		stream.close();
-	}
 }
 
 /*@SuppressWarnings("unchecked")

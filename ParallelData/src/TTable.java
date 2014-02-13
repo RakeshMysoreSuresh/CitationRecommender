@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -29,6 +30,12 @@ public class TTable extends Config implements Serializable{
 	public TTable()
 	{
 		try {
+			
+			File titleListFile = new File(TRANSLATION_TABLE_SER);
+			if (!titleListFile.exists())
+			{
+				storeTT();
+			}
 			storeTT();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -37,22 +44,22 @@ public class TTable extends Config implements Serializable{
 	
 	public TTable readTransTable(String fileName) throws IOException, ClassNotFoundException {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
-		ObjectInputStream in = new ObjectInputStream(new FileInputStream("TTable.ser"));
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(TRANSLATION_TABLE_SER));
 		return (TTable)in.readObject();
 	}
 	
-	public static int findNumWords(String fileName) throws IOException{
-		BufferedReader r = new BufferedReader(new FileReader(fileName));
-		for(int i=0;i<100000;i++){
-			r.readLine();
+	public static int findNum(String file){
+		try {
+			BufferedReader r = new BufferedReader(new InputStreamReader(Runtime.getRuntime().exec
+					("wc -l " + file). getInputStream()));
+			String output = r.readLine();
+			int numWords = Integer.parseInt(output.split(" ")[0]);
+			System.out.println("Number of words =  " + numWords);
+			return numWords;
+		} catch (NumberFormatException | IOException e) {
+			throw new RuntimeException(e);
 		}
-		String temp = null, curr;
-		while((curr=r.readLine())!=null){
-			temp = curr;
-		}
-		int num = Integer.parseInt(temp.split(" ")[0]);
-		System.out.println(num);
-		return num;
+		
 	}
 	
 	public void storeTT() throws IOException {
@@ -64,10 +71,10 @@ public class TTable extends Config implements Serializable{
 			String fileName = TRANSLATION_TABLE_TXT + TTABLE_COMPRESSED_SUFFIX;
 			
 			BufferedReader r = new BufferedReader(new FileReader(fileName));
-			int numWords = findNumWords(fileName);
-			table = new ArrayList<HashMap<Integer, Double>>();
+			int numWords = findNum(BAG_OF_WORDS_VCB);
+			table = new ArrayList<HashMap<Integer, Double>>(numWords);
 			for(int i=0; i<numWords+100; i++){
-				table.add(new HashMap<Integer, Double>());
+				table.add(new HashMap<Integer, Double>(30));
 			}
 			String s;
 			String[] spl;
@@ -76,7 +83,6 @@ public class TTable extends Config implements Serializable{
 			while((s = r.readLine())!=null){
 				spl = s.split(" ");
 				int wordId = Integer.parseInt(spl[0]);
-				;
 				Integer titleId = Integer.parseInt(spl[1]);
 				Double tValue = Double.parseDouble(spl[2]);
 				if(wordId != prevWordId){
@@ -88,6 +94,7 @@ public class TTable extends Config implements Serializable{
 			}
 			ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(TRANSLATION_TABLE_SER));
 			out.writeObject(this);
+			System.out.println("Finished serializing translation table onto disk");
 			r.close();
 			out.close();
 		}
@@ -101,17 +108,9 @@ public class TTable extends Config implements Serializable{
 		return val;
 	}
 	
-	public static void main(String[] args) throws IOException {
-		//System.out.println(findNumWords("Test4(1-10-0-1-1-0).final"));
-		//new TTable().storeTT("Test4(1-10-0-1-1-0).final");
-		System.out.println(findNumWords("C:\\Tests\\Test (111)\\113-06-26.103203.rakesh.t3.final"));
-		new TTable().storeTT();
-		//compressTTable("C:\\Tests\\Test (111)\\113-06-26.103203.rakesh.t3.final");
-	}
-	
 	static void compressTTable(String path) throws NumberFormatException, IOException{
 		BufferedReader r =  new BufferedReader(new FileReader(path));
-		PrintWriter w = new PrintWriter(new File(path+"compressed"));
+		PrintWriter w = new PrintWriter(new File(path+"_compressed"));
 		String entry;
 		while((entry = r.readLine())!=null){
 			double value = Double.parseDouble(entry.split(" ")[2]); 

@@ -16,7 +16,7 @@ import org.apache.lucene.search.TotalHitCountCollector;
  * @author Rakesh_BCKUP
  *
  */
-public class Evaluation {
+public class Evaluation extends Config{
 	
 	double[] precision, recall, fMeasure, bpRef, reciprocalRank, mRR;
 	double[] avgPrecision, avgRecall, avgFMeasure, avgBpRef, avgReciprocalRank, avgMRR;
@@ -59,6 +59,11 @@ public class Evaluation {
 	 * @throws ClassNotFoundException 
 	 */
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
+		
+		BufferedReader idReader = new BufferedReader(new FileReader(ID));
+		BufferedReader	contextReader = new BufferedReader(new FileReader(CONTEXT));
+		BufferedReader	actualRefReader = new BufferedReader(new FileReader(DATASET_DIR + CITED_PAPERS_FILENAME));
+		 
 		Evaluation ev = new Evaluation();
 		RefRec ref = new RefRec();
 		
@@ -66,9 +71,6 @@ public class Evaluation {
 		//"myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
 		//---------------------------------------------
 			 
-			 BufferedReader idReader = new BufferedReader(new FileReader("ID.txt"));
-			 BufferedReader	contextReader = new BufferedReader(new FileReader("Context.txt"));
-			 BufferedReader	actualRefReader = new BufferedReader(new FileReader("CitedPapers.txt"));
 			 String readLine;
 				String curPaperId, context,actualRef=null;
 				String previousId = "";
