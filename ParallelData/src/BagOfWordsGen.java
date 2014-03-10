@@ -12,10 +12,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.LowerCaseTokenizer;
+import org.apache.lucene.analysis.PorterStemFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishMinimalStemFilter;
+import org.apache.lucene.analysis.en.KStemFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
@@ -36,7 +40,7 @@ import org.apache.lucene.util.Version;
  * Outputs: Each line in this
  * 1. Bag of words file
  */
-public class BagOfWordsGen {
+public class BagOfWordsGen extends Config{
 
 	//"<ID file> <Raw Contexts> <Output BagofWords filename> "
 	public BagOfWordsGen(String[] args) {
@@ -50,6 +54,7 @@ public class BagOfWordsGen {
 			contextReader = new BufferedReader(new FileReader(args[1]));
 			wordsWriter = new PrintWriter(new FileWriter(args[2]));
 			System.out.println("Creating bag of words at:" + args[2]);
+			readNoisyWords();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -72,9 +77,7 @@ public class BagOfWordsGen {
 
 	public static void main(String[] args) throws IOException {
 
-		BagOfWordsGen parallel = new BagOfWordsGen(new String[]{"ID", "Context", "BagOfWords"});
-		parallel.generate();
-
+		stemContext();
 	}
 	/**
 	 * Gather all words from all citation contexts in a given citing paper and write into a line
@@ -88,13 +91,13 @@ public class BagOfWordsGen {
 
 		try {
 			//Dummy reads to exclude the column name
-			curPaperId = idReader.readLine(); // read the column name
-			context = contextReader.readLine(); // read the column name
+			//curPaperId = idReader.readLine(); // read the column name
+			//context = contextReader.readLine(); // read the column name
 			//title = titleReader.readLine(); // read the column name
 			if(properNounReader!=null){
 				noun = properNounReader.readLine();//Dummy read
 			}
-			System.out.println(curPaperId);
+			//System.out.println(curPaperId);
 			long startTime = 0, endTime = 0;
 			startTime = System.currentTimeMillis();
 			int percentage = 0;
@@ -107,11 +110,19 @@ public class BagOfWordsGen {
 							+ ((endTime - startTime) / 1000));
 					// break;
 				}
-				if (curPaperId.equals(previousId)) {
+				if (curPaperId.equals(previousId) || numCitation == 1) {
 
 					// Read one citation context and get bag of words
 					context = contextReader.readLine();
 					removeStopWordsStem(context);
+					if(!Config.AGGRESSIVE_STEMMING)
+					{
+						removeStopWordsStem(context);
+					}
+					else
+					{
+						aggresivelyStem(context);
+					}
 
 				} else {
 					if (bagOfWords.size() != 0) {
@@ -124,19 +135,18 @@ public class BagOfWordsGen {
 					context = contextReader.readLine();
 					// Initialize Sets to read the new Paper citations
 					bagOfWords.clear();
-					int firstDelimiterIndex = context.indexOf(' '); int lastDelimiterIndex  = context.lastIndexOf(' ');
-					if (firstDelimiterIndex > -1 && lastDelimiterIndex > -1) {
-						context = context.substring(firstDelimiterIndex,
-								lastDelimiterIndex);
-						removeStopWordsStem(context);
-						if (properNounReader != null) {
-							noun = properNounReader.readLine();
-							bagOfWords.addAll(Arrays.asList(noun.split(" ")));
-						}
-					}
-					else
+
+					if(Config.MINIMAL_STEMMING)
 					{
-						System.out.println("Ignoring: "+context);
+						removeStopWordsStem(context);
+					}
+					else if(Config.AGGRESSIVE_STEMMING)
+					{
+						aggresivelyStem(context);
+					}
+					if (properNounReader != null) {
+						noun = properNounReader.readLine();
+						bagOfWords.addAll(Arrays.asList(noun.split(" ")));
 					}
 				}
 				previousId = curPaperId;
@@ -169,13 +179,11 @@ public class BagOfWordsGen {
 		// input string
 		Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version
 		Analyzer analyzer = new StandardAnalyzer(matchVersion); // or any other analyzer
-		TokenStream tokenStream = analyzer.tokenStream("test",
-				new StringReader(input));
+		TokenStream tokenStream = analyzer.tokenStream("test",new StringReader(input));
 		// remove stop words
 		tokenStream = new EnglishMinimalStemFilter(tokenStream);
 		// retrieve the remaining tokens
-		CharTermAttribute token = tokenStream
-				.getAttribute(CharTermAttribute.class);
+		CharTermAttribute token = tokenStream.getAttribute(CharTermAttribute.class);
 
 		while (tokenStream.incrementToken()) {
 			bagOfWords.add(token.toString());
@@ -186,38 +194,151 @@ public class BagOfWordsGen {
 		analyzer.close();
 	}
 	
+	void aggresivelyStem (String input) throws IOException {
+			
+		Version matchVersion = Version.LUCENE_35; 
+		
+	    TokenStream stemFilter = new PorterStemFilter(new LowerCaseTokenizer(new StringReader(input)));
+		CharTermAttribute token = stemFilter.getAttribute(CharTermAttribute.class);
+		while (stemFilter.incrementToken()) {
+			String word = token.toString();
+			if (word.length() > 2 && word.length() < 30) {
+				bagOfWords.add(word);
+			}
+			else
+			{
+				if (word.length() > 30) {
+					System.out.println();
+				}
+			}
+		}
+		stemFilter.close();
+	}
+		
+	static void removeNoisyWords() {
+		try {
+			BufferedReader bagOfWordsReader = new BufferedReader(new FileReader(DATASET_DIR + BAG_OF_WORDS_FILENAME));
+			PrintWriter bowWriter = new PrintWriter(BAG_OF_WORDS_DENOISED);
+			String bagofwordsline;
+			int wordsFiltered = 0;
+			while((bagofwordsline = bagOfWordsReader.readLine()) != null)
+			{
+				StringBuffer buffer = new StringBuffer(20);
+				String[] words = bagofwordsline.split(" ");
+				for(int i = 0; i<words.length; i++)
+				{
+					if(!noisyWordSet.contains(words[i]))
+					{
+						buffer.append(words[i]);
+						buffer.append(" ");
+					}
+					else{
+						wordsFiltered++;
+					}
+				}
+				bowWriter.println(buffer.toString());
+			}
+			System.out.println("Noisy words filtered: " + wordsFiltered);
+			bagOfWordsReader.close();
+			bowWriter.close();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			throw new RuntimeException(e);
+		}
+		
+	}
+	
+	/**
+	 * Removes the first and last words in every context
+	 * @throws IOException 
+	 */
+	static void contextRadiusCleaner() throws IOException
+	{
+		BufferedReader inputReader = new BufferedReader(new FileReader(CONTEXT));
+		PrintWriter outputwriter = new PrintWriter(DATASET_DIR + "ContextCleaned");
+		String s;
+		int lineNum = 0;
+		Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version
+		Analyzer analyzer = new StandardAnalyzer(matchVersion); // or any other analyzer
+		while((s = inputReader.readLine())!=null)
+		{
+			int firstDelimiterIndex = s.indexOf(' '); int lastDelimiterIndex  = s.lastIndexOf(' ');
+			if(firstDelimiterIndex > -1 && lastDelimiterIndex > -1)
+			{
+				s = s.substring(firstDelimiterIndex, lastDelimiterIndex);
+				TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(s));
+				// retrieve the remaining tokens
+				CharTermAttribute token = tokenStream.getAttribute(CharTermAttribute.class);
+
+				while (tokenStream.incrementToken()) {
+					outputwriter.print(token);
+					outputwriter.print(" ");
+				}
+				outputwriter.println("");
+				tokenStream.end();
+				tokenStream.close();
+			}
+		}
+		analyzer.close();
+		inputReader.close();
+		outputwriter.close();
+	}
+	
+	static void stemContext() throws IOException
+	{
+		BufferedReader inputReader = new BufferedReader(new FileReader(DATASET_DIR + "ContextCleaned"));
+		PrintWriter outputwriter = new PrintWriter(DATASET_DIR + "ContextCleanedKStemmed");
+		String s;
+		Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version
+		while((s = inputReader.readLine())!=null)
+		{
+			TokenStream stemFilter = new KStemFilter(new LowerCaseTokenizer(matchVersion, new StringReader(s)));
+			CharTermAttribute token = stemFilter.getAttribute(CharTermAttribute.class);
+			while (stemFilter.incrementToken()) {
+				String word = token.toString();
+				if (word.length() > 2 && word.length() < 30) {
+					outputwriter.print(token);
+					outputwriter.print(" ");
+				}
+			}
+			outputwriter.println("");
+			stemFilter.close();
+		}
+		inputReader.close();
+		outputwriter.close();
+	}
+	
+	static void readNoisyWords()
+	{
+		BufferedReader noisyWordsReader;
+		try {
+			noisyWordsReader = new BufferedReader(new FileReader(NOISY_WORDS));
+			noisyWordSet = new HashSet<>(TTable.findNum(NOISY_WORDS));
+			String word;
+			while((word = noisyWordsReader.readLine()) != null)
+			{
+				noisyWordSet.add(word.trim());
+				
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private static BufferedReader idReader;
 	private static BufferedReader contextReader;
 	private static BufferedReader properNounReader;
 	private static PrintWriter wordsWriter;
 	private Set<String> bagOfWords = new HashSet<String>();
+	static HashSet<String> noisyWordSet;
 	//private BufferedReader titleReader;
 	
 	// Keeps a count of citing papers whose fertility is out of bound
-/*	private int ignored = 0;
+	private int ignored = 0;
 	static final int MAX_FERTILITY = 20;
 	static final double LOWERBOUND = 1/MAX_FERTILITY;
 	
-	private void writeToFile() {
-		double fertility = bagOfWords.size()/citedPaperIds.size();
-
-		if (!((fertility>MAX_FERTILITY)||(fertility<LOWERBOUND))) {
-			Iterator<String> it = bagOfWords.iterator();
-			String write = "";
-			while (it.hasNext()) {
-				write = write + " " + it.next();
-			}
-			wordsWriter.println(write);
-			Iterator<Integer> it2 = citedPaperIds.iterator();
-			write = "";
-			while (it2.hasNext()) {
-				write = write + " " + it2.next();
-			}
-			titleWriter.println(write);
-		}
-		else{
-			ignored++;
-		}
-	}*/
+	
 
 }

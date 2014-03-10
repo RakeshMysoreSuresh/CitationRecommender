@@ -1,11 +1,21 @@
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.LowerCaseTokenizer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.en.KStemFilter;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.util.Version;
 
 import com.ibm.icu.text.Normalizer;
 
@@ -36,13 +46,16 @@ public class PatternMatch extends Config{
 										  "tokenizeNLs  = false,"+
 										  "untokenizable = noneDelete,"+
 										  "normalizeOtherBrackets = true";
-	private static final String EXCLUDEPATTERN = "(.*[\\\\][/].*)|((\\-.+\\-))";
 	private static final String EMAILPATTERN = "([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4})";
 	//Space followed by zero or more spl char followed by a set of diacritics
 	private static final String DIACRITICPATTERN = "((?<=\\s)[\\^\\-=]*[^\u0000-\u0080a-zA-Z0-9]+[\\^\\-=]*)|([\\^\\-=]*[^\u0000-\u0080a-zA-Z0-9]+[\\^\\-=]*(?=\\s))";
 	private static final String MULTSPLCHARPATTERN = "([^a-zA-Z0-9\\s][^a-zA-Z0-9\\s]+)";
 	private static final String TRAILSPLCHARPATTERN = "((?<=\\s)[^a-zA-Z0-9\\s]+)|([^a-zA-Z0-9\\s]+(?=\\s))";
 	private static final String MATHVARPATTERN = "((?<=\\s)[A-Za-z][ijkabclmnxz0-9](?=\\s))";
+	private static final String NUMERICPATTERN = "(\\d+[.|%|\\-|,|\\d]*)";
+	//private static final String NUMERICPATTERN = "(\\s\\d+.\\d*\\s)";
+	
+	private static final String EXCLUDEPATTERN = "(.*[\\\\][/].*)|(([=]*\\-.+\\-))"+"|"+NUMERICPATTERN;
 	private static final String SPLCHARPATTERN = MULTSPLCHARPATTERN+"|"+TRAILSPLCHARPATTERN;
 	private static final String REMOVEPATTERN = DIACRITICPATTERN+"|"+EMAILPATTERN+"|"+SPLCHARPATTERN+"|"+MATHVARPATTERN;
 	//private static final String PROPERNOUNPATTERN = "((?<=\\s)
@@ -56,18 +69,55 @@ public class PatternMatch extends Config{
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	public static void clean(String otherPoSFile, String properNounFile) throws FileNotFoundException, IOException {
-		TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
-		        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
+	public static void cleanWithTagging(String otherPoSFile, String properNounFile) throws FileNotFoundException, IOException {
+		TokenizerFactory<CoreLabel> ptbTokenizerFactory = PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
 		BufferedReader r = new BufferedReader(new FileReader(CONTEXT));
 		PrintWriter pw = new PrintWriter(new FileWriter(otherPoSFile));
 		PrintWriter propNounWriter = new PrintWriter(new FileWriter(properNounFile));
 	    String s;
-	    s = r.readLine();
+	    //s = r.readLine(); //Read the column name
+	    int lineNum = 0;
 		while ((s=r.readLine())!=null) {
-			process(ptbTokenizerFactory, s, pw, propNounWriter);
-			pw.println("");
-			propNounWriter.println("");
+			if (lineNum%TOTAL_LINES_IN_DATASET_TENPERCENT == 0) {
+				System.out.println("PoS Tagging: " + lineNum/TOTAL_LINES_IN_DATASET_TENPERCENT + "%");
+			}
+			int firstDelimiterIndex = s.indexOf(' '); int lastDelimiterIndex  = s.lastIndexOf(' ');
+			if (firstDelimiterIndex > -1 && lastDelimiterIndex > -1) {
+				s = s.substring(firstDelimiterIndex, lastDelimiterIndex);
+				process(ptbTokenizerFactory, s, pw, propNounWriter);
+				pw.println("");
+				propNounWriter.println("");
+			}
+			lineNum++;
+		}
+		r.close();
+	}
+	
+	/**
+	 *  
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public static void cleanWithoutTagging(String contextFile) throws FileNotFoundException, IOException {
+		TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
+		        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
+		BufferedReader r = new BufferedReader(new FileReader(CONTEXT));
+		PrintWriter pw = new PrintWriter(new FileWriter(contextFile));
+	    String s;
+	    //s = r.readLine(); //Read the column name
+	    int lineNum = 0;
+		while ((s=r.readLine())!=null) {
+			if (lineNum%TOTAL_LINES_IN_DATASET_TENPERCENT == 0) {
+				System.out.println("PoS Tagging: " + lineNum/TOTAL_LINES_IN_DATASET_TENPERCENT + "%");
+			}
+			//int firstDelimiterIndex = s.indexOf(' '); int lastDelimiterIndex  = s.lastIndexOf(' ');
+			if (s.length() > 1) {
+				//s = s.substring(firstDelimiterIndex, lastDelimiterIndex);
+				process(ptbTokenizerFactory, s, pw);
+				pw.println("");
+				//propNounWriter.println("");
+			}
+			lineNum++;
 		}
 		r.close();
 	}
@@ -80,8 +130,7 @@ public class PatternMatch extends Config{
 	 * @param propNounWriter
 	 * @throws IOException
 	 */
-	public static void process(TokenizerFactory<CoreLabel> ptbTokenizerFactory,
-			String s, PrintWriter pw, PrintWriter propNounWriter) throws IOException {
+	public static void process(TokenizerFactory<CoreLabel> ptbTokenizerFactory,String s, PrintWriter pw, PrintWriter propNounWriter) throws IOException {
 		
 		DocumentPreprocessor documentPreprocessor = new DocumentPreprocessor(new StringReader(s));
 		documentPreprocessor.setTokenizerFactory(ptbTokenizerFactory);
@@ -113,6 +162,35 @@ public class PatternMatch extends Config{
 					pw.print(" ");
 				}
 			}
+		}
+	}
+	
+	/**
+	 * 
+	 * @param ptbTokenizerFactory
+	 * @param s
+	 * @param pw
+	 * @param propNounWriter
+	 * @throws IOException
+	 */
+	public static void process(TokenizerFactory<CoreLabel> ptbTokenizerFactory,String s, PrintWriter pw) throws IOException {
+		
+		DocumentPreprocessor documentPreprocessor = new DocumentPreprocessor(new StringReader(s));
+		documentPreprocessor.setTokenizerFactory(ptbTokenizerFactory);
+		for (List<HasWord> sentence : documentPreprocessor) {
+			StringBuilder builder = new StringBuilder(200);
+			int count = 0;
+			for (HasWord word : sentence) {
+				String w = word.toString();
+				if (w.length() > 1 || w.matches("[A-Z]+")) {
+					if (!w.matches(EXCLUDEPATTERN)) {
+						builder.append(word);
+						builder.append(" ");
+					}
+				}
+			}
+			String ptbTokenizedString = builder.toString();
+			String regexCleaned = ptbTokenizedString.replaceAll(REMOVEPATTERN, "");
 		}
 	}
 	
@@ -161,6 +239,64 @@ public class PatternMatch extends Config{
 		}
 	}
 	
+	/**
+	 * Stem the input sting using the Standard Analyzer( includes lower case filter) and K-stem algorithm
+	 * @param ptbTokenizerFactory
+	 * @param s
+	 * @param pw
+	 * @param propNounWriter
+	 * @throws IOException
+	 */
+	public static List<String> KStemQuery(String s) throws IOException {
+		
+/*		try {
+			if(BagOfWordsGen.noisyWordSet == null)
+			{
+				BagOfWordsGen.readNoisyWords();
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+		
+		int firstDelimiterIndex = s.indexOf(' '); int lastDelimiterIndex  = s.lastIndexOf(' ');
+		if(firstDelimiterIndex > -1 && lastDelimiterIndex > -1)
+		{
+			//s = s.substring(firstDelimiterIndex, lastDelimiterIndex);
+			
+			Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version
+			Analyzer analyzer = new StandardAnalyzer(matchVersion); // or any other analyzer
+			TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(s));
+			// retrieve the remaining tokens
+			TokenStream stemFilter = new KStemFilter(tokenStream);
+			CharTermAttribute token = stemFilter.getAttribute(CharTermAttribute.class);
+			
+			List<String> tokens = new ArrayList<>(s.length());
+			while (stemFilter.incrementToken()) {
+				String word = token.toString();
+				if (word.length() > 2 && word.length() < 30 ) {
+					/*if(BagOfWordsGen.noisyWordSet == null){
+						tokens.add(word);
+					}
+					else
+					{
+						if(!BagOfWordsGen.noisyWordSet.contains(word))
+						{
+							tokens.add(word);
+						}
+					}*/
+					tokens.add(word);
+				}
+			}
+			if(tokens.size() > 5)
+			{
+				return tokens;
+			}
+		}
+		return null;
+		
+	}
+
 	static void regexTest(String input, String pattern){
 		System.out.println(input.replaceAll(pattern, ""));
 	}
@@ -169,9 +305,58 @@ public class PatternMatch extends Config{
 		return Normalizer.decompose(text, false, 0) .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 	}
 	
-	public static boolean sentenceDetector(String text){
-		return false;
+	public static void main(String[] args) {
+		regexTest("50-90", SPLCHARPATTERN);
 	}
+	
+	/**
+	 * Reads from Context and tokenizes according to the Penn Tree Bank algorithm, and writes it back to a another file (Context_PTB_Tokenized)
+	 * Also skips the first and last words from the context as they are frequently truncated and their presence increases noise
+	 */
+	static void tokenize()
+	{
+		try {
+			BufferedReader inputReader = new BufferedReader(new FileReader(CONTEXT));
+			PrintWriter outputwriter = new PrintWriter(CONTEXT_PTB_TOKENIZED);
+			
+			TokenizerFactory<CoreLabel> ptbTokenizerFactory = 
+			        PTBTokenizer.factory(new CoreLabelTokenFactory(), OPTIONS);
+			String s;
+			int lineNum = 0;
+			
+			while((s = inputReader.readLine())!=null)
+			{
+				if (lineNum%TOTAL_LINES_IN_DATASET_TENPERCENT == 0) {
+					System.out.println("PTB Tokenizing: " + lineNum/TOTAL_LINES_IN_DATASET_TENPERCENT + "%");
+				}
+				lineNum++;
+				
+				if (s.length() > 1) {
+					//s = s.substring(firstDelimiterIndex, lastDelimiterIndex);
+					DocumentPreprocessor documentPreprocessor = new DocumentPreprocessor(new StringReader(s));
+					documentPreprocessor.setTokenizerFactory(ptbTokenizerFactory);
+					for (List<HasWord> sentence : documentPreprocessor) {
+						StringBuilder builder = new StringBuilder(200);
+						for (HasWord word : sentence) {
+							String w = word.toString();
+							if (w.length() > 1 || w.matches("[A-Z]+")) {
+								if (!w.matches(EXCLUDEPATTERN)) {
+									builder.append(word.toString().replaceAll(REMOVEPATTERN, ""));
+									builder.append(" ");
+								}
+							}
+						}
+						outputwriter.print(builder.toString());
+					}
+					outputwriter.print("\n");
+				}
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	
 /****************************Rough work*************************
  * 
  * 
@@ -183,6 +368,7 @@ public static void clean(String otherPoSFile, String properNounFile) throws File
 		//StringReader r = new StringReader("ï¿½ï¿½Â¤Â£ and ï¿½ï¿½ï¿½ï¿½ï¿½ &quot;play$%&&ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[sgsds]&quot; C# 1-R are positive constants-=-=. Hence user benefit is an increasing function of the number of contributors, but with diminishing returnsâa form widely accepted in this context (see, e.g., [2], [3], [15]). Thus, the performance of the system, denoted by ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ , is defined as the difference between the average benefit received by all users (including both contributors and free-riders) an");
 	    //PrintWriter pw = new PrintWriter(new OutputStreamWriter(System.out, "utf-8"));
 		//PrintWriter pw = new PrintWriter(new FileWriter("Context_PTBtokenized(NoisyCitationRemoved).text"));
+		System.out.println(new String(" 25.2% ").matches(NUMERICPATTERN));
 		PrintWriter pw = new PrintWriter(new FileWriter(otherPoSFile));
 		PrintWriter propNounWriter = new PrintWriter(new FileWriter(properNounFile));
 	    String s;

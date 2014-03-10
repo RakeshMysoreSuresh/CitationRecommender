@@ -68,7 +68,7 @@ public class TTable extends Config implements Serializable{
 		if(!ttFile.exists())
 		{
 			TTable.compressTTable(TRANSLATION_TABLE_TXT);
-			String fileName = TRANSLATION_TABLE_TXT + TTABLE_COMPRESSED_SUFFIX;
+			String fileName = TRANSLATION_TABLE_TXT + (TTABLE_COMPRESSION ? TTABLE_COMPRESSED_SUFFIX : "");
 			
 			BufferedReader r = new BufferedReader(new FileReader(fileName));
 			int numWords = findNum(BAG_OF_WORDS_VCB);
@@ -114,7 +114,7 @@ public class TTable extends Config implements Serializable{
 		String entry;
 		while((entry = r.readLine())!=null){
 			double value = Double.parseDouble(entry.split(" ")[2]); 
-			if(value > 0.001){
+			if(value > 0.0005){
 				w.println(entry);
 			}
 		}

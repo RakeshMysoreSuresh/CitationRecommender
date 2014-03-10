@@ -15,31 +15,34 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeSet;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
-public class CitationsGen extends Config{
+public class CitationsGen extends Config {
 
-	private HashMap<String, Integer> titlesMap;
+	private BiMap<String, Integer> titlesMap;
 	private BufferedReader idReader;
-	BufferedReader titleReader ;
+	BufferedReader titleReader;
 	private PrintWriter titleWriter;
-	private Set<Integer> citedPaperIds = new HashSet<>();
+	private Set<Integer> citedPaperIds = new TreeSet<>();
 	private ArrayList<String> titleList = new ArrayList<>();
 	int[] titleVCBMap = new int[600000];
 
-	CitationsGen(){
+	CitationsGen() {
 		try {
 			idReader = new BufferedReader(new FileReader(ID));
 			titleReader = new BufferedReader(new FileReader(TITLE));
-			
+
 			File titleWriterFile = new File(DATASET_DIR + CITED_PAPERS_FILENAME);
-			if (!titleWriterFile.exists())
-			{
+			readTitleMap();
+			if (!titleWriterFile.exists()) {
 				titleWriter = new PrintWriter(new FileWriter(titleWriterFile));
-				System.out.println("Creating cited papers at:" + DATASET_DIR + CITED_PAPERS_FILENAME);			
-				readTitleMap();
+				System.out.println("Creating cited papers at:" + DATASET_DIR
+						+ CITED_PAPERS_FILENAME);
 				generate();
-			}	
+			}
 
 		} catch (ClassNotFoundException | IOException e) {
 			throw new RuntimeException(e);
@@ -52,42 +55,40 @@ public class CitationsGen extends Config{
 	 */
 	public static void main(String[] args) throws Exception {
 		CitationsGen cit = new CitationsGen();
-		cit.generate();
 
 	}
 
 	void generate() throws IOException {
-		int numCitation = 0;
+		int numCitation = 1;
 		String curPaperId;
 		String previousId = "", title;
-		int tenPercentLineCount = TOTAL_LINES_IN_DATASET/10;
+		int tenPercentLineCount = TOTAL_LINES_IN_DATASET / 10;
 
-		System.out.println(idReader.readLine() + " : " + titleReader.readLine()); // read the column name
-		//System.out.println(idReader.readLine() + " : " + titleReader.readLine()); // read the column name
+		// System.out.println(idReader.readLine() + " : " +
+		// titleReader.readLine()); // read the column name
 		long startTime = 0, endTime = 0;
 		startTime = System.currentTimeMillis();
-		int percentage=0;
+		int percentage = 0;
 		while ((curPaperId = idReader.readLine()) != null) {
 			numCitation++;
 
 			if (0 == numCitation % tenPercentLineCount) {
 				endTime = System.currentTimeMillis();
-				System.out.println("Time taken for "+(++percentage)+"% = "
+				System.out.println("Time taken for " + (++percentage) + "% = "
 						+ ((endTime - startTime) / 1000));
-				//break;
+				// break;
 			}
 			if (curPaperId.equals(previousId)) {
 				// Read one citation context and get bag of words
 				// Read corresponding paper title, fetch corresponding ID
 				title = titleReader.readLine();
 				Integer citedPaperId = titlesMap.get(title);
-				if(citedPaperId == null){
+				if (citedPaperId == null) {
 					System.out.println(title);
 				}
-				citedPaperIds .add(citedPaperId);
-			}
-			else {
-				if (citedPaperIds.size() !=0) {
+				citedPaperIds.add(citedPaperId);
+			} else {
+				if (citedPaperIds.size() != 0) {
 					// write bagsOfWords to a file
 					// write citedPaperIds to a file
 					writeToFile();
@@ -103,7 +104,7 @@ public class CitationsGen extends Config{
 		}
 
 		// Write the last set of values
-		if (citedPaperIds !=null) {
+		if (citedPaperIds != null) {
 			// write bagsOfWords to a file
 			// write citedPaperIds to a file
 			writeToFile();
@@ -114,10 +115,10 @@ public class CitationsGen extends Config{
 
 	private void writeToFile() {
 		Iterator<Integer> it2 = citedPaperIds.iterator();
-		String write= it2.next().toString();
-		while(it2.hasNext()){
+		String write = it2.next().toString();
+		while (it2.hasNext()) {
 			Integer nextCited = it2.next();
-			write = write +" "+ nextCited;
+			write = write + " " + nextCited;
 		}
 		titleWriter.println(write);
 	}
@@ -127,25 +128,23 @@ public class CitationsGen extends Config{
 
 		ObjectInputStream obj;
 		File map = new File(TITLE2ID);
-		if (!map.exists())
-		{
+		if (!map.exists()) {
 			storeMap(map);
-		}
-		else{
+		} else {
 			obj = new ObjectInputStream(new FileInputStream(map));
-			titlesMap = ((HashMap<String, Integer>) obj.readObject());
+			titlesMap = ((BiMap<String, Integer>) obj.readObject());
 			obj.close();
 		}
 	}
 
 	@SuppressWarnings({ "unchecked", "resource" })
-	private void storeMap(File mapFile) throws IOException, ClassNotFoundException{
-		titlesMap = new HashMap<>(240000);
+	private void storeMap(File mapFile) throws IOException, ClassNotFoundException {
+		titlesMap = HashBiMap.create(240000);
 		String title = null;
-		int count = 0;
+		int count = 1;
 		BufferedReader br = new BufferedReader(new FileReader(TITLE));
-		while((title = br.readLine())!=null){
-			if(titlesMap.get(title)==null){
+		while ((title = br.readLine()) != null) {
+			if (titlesMap.get(title) == null) {
 				count++;
 				titlesMap.put(title, count);
 				titleList.add(title);
@@ -153,54 +152,42 @@ public class CitationsGen extends Config{
 		}
 		ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(mapFile));
 		stream.writeObject(titlesMap);
-		
+
 		File titleListFile = new File(TITLE_LIST);
-		if (!titleListFile.exists())
-		{
+		if (!titleListFile.exists()) {
 			stream = new ObjectOutputStream(new FileOutputStream(titleListFile));
 			stream.writeObject(titleList);
 			stream.close();
-		}
-		else{
+		} else {
 			ObjectInputStream obj = new ObjectInputStream(new FileInputStream(titleListFile));
-			titleList = (ArrayList<String>)obj.readObject();
+			titleList = (ArrayList<String>) obj.readObject();
 			obj.close();
 		}
 	}
 }
 
-/*@SuppressWarnings("unchecked")
-private void readTitleList() throws ClassNotFoundException, IOException {
 
-	FileInputStream fin = new FileInputStream(TITLE2ID);
-	ObjectInputStream obj;
-	File map = new File(TITLE2ID);
-	if (!map.exists())
-	{
-		storeTitleList(map);
-	}
-	else{
-		obj = new ObjectInputStream(new FileInputStream(map));
-		titlesMap = ((HashMap<String, Integer>) obj.readObject());
-		obj.close();
-	}
-	fin.close();
-}
-
-@SuppressWarnings("unchecked")
-private void storeTitleList() throws IOException, ClassNotFoundException
-{
-	File titleListFile = new File(TITLE_LIST);
-	if (!titleListFile.exists())
-	{
-		ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(titleListFile));
-		stream.writeObject(titleList);
-		stream.close();
-	}
-	else{
-		ObjectInputStream obj = new ObjectInputStream(new FileInputStream(titleListFile));
-		titlesMap = ((HashMap<String, Integer>) obj.readObject());
-		obj.close();
-	}
-	
-}*/
+/*  @SuppressWarnings("unchecked") 
+  private void readTitleList() throws  ClassNotFoundException, IOException {
+  
+	  FileInputStream fin = new FileInputStream(TITLE2ID); ObjectInputStream obj;
+	  File map = new File(TITLE2ID); if (!map.exists()) { storeTitleList(map); }
+	  else{ obj = new ObjectInputStream(new FileInputStream(map)); titlesMap =
+	  ((HashMap<String, Integer>) obj.readObject()); obj.close(); } fin.close(); 
+  }
+  
+  @SuppressWarnings("unchecked") private void storeTitleList() throws
+  IOException, ClassNotFoundException {
+	  File titleListFile = new File(TITLE_LIST); 
+	  if (!titleListFile.exists()) 
+	  { 
+		  ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(titleListFile));
+		  stream.writeObject(titleList); stream.close(); 	
+	  } 
+	  else{ ObjectInputStream obj
+	  = new ObjectInputStream(new FileInputStream(titleListFile)); titlesMap =
+	  ((HashMap<String, Integer>) obj.readObject()); obj.close(); 
+  }
+  
+  }*/
+ 

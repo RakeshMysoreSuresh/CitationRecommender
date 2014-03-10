@@ -1,10 +1,10 @@
 import java.io.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.lucene.search.TotalHitCountCollector;
 
@@ -35,7 +35,8 @@ public class Evaluation extends Config{
 	//Temporary fields
 	HashMap<Integer, Integer> index = new HashMap<>();
 	int firstRecIndex = -1;
-	int[] lastIndexes = new int[]{4,9,19,39,79};			
+	int[] lastIndexes = new int[]{4,9,19,39,79};		
+	RefRec ref = new RefRec();;
 	
 	public Evaluation() {
 		precision = new double[5];
@@ -60,24 +61,20 @@ public class Evaluation extends Config{
 	 */
 	public static void main(String[] args) throws ClassNotFoundException, IOException {
 		
+		Evaluation ev = new Evaluation();
 		BufferedReader idReader = new BufferedReader(new FileReader(ID));
 		BufferedReader	contextReader = new BufferedReader(new FileReader(CONTEXT));
 		BufferedReader	actualRefReader = new BufferedReader(new FileReader(DATASET_DIR + CITED_PAPERS_FILENAME));
-		 
-		Evaluation ev = new Evaluation();
-		RefRec ref = new RefRec();
-		
 		// Sample citation context
 		//"myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
 		//---------------------------------------------
 			 
-			 String readLine;
-				String curPaperId, context,actualRef=null;
+			 String curPaperId, context,actualRef=null;
 				String previousId = "";
 				
 			  //Dummy reads
-			  idReader.readLine();
-			  contextReader.readLine();
+			  //idReader.readLine();
+			  //contextReader.readLine();
 			  int i = 0;
 			  //Read File Line By Line
 			  while (true){
@@ -85,7 +82,7 @@ public class Evaluation extends Config{
 				curPaperId = idReader.readLine(); // read the column name
 				context = contextReader.readLine(); // read the column name
 
-				{if(curPaperId == null)
+				{if(curPaperId == null | context ==null)
 					break;
 				}
 				if (!curPaperId.equals(previousId)) {
@@ -93,19 +90,20 @@ public class Evaluation extends Config{
 					actualRef = actualRefReader.readLine();		
 				}
 				
-				if (i%5000 == 0) {
+				if (i%1000 == 0) {
+			    //if (i < 10) {
 					try {
 						int[] recoIDS;
-						recoIDS =  ref.rankPapers(context);
 						String[] arr = actualRef.split(" ");
-						Integer[] actualRefId = new Integer[arr.length-1];
-						for(int j=1; j<arr.length; j++){
-							actualRefId[j-1] = Integer.parseInt(arr[j]);
+						Integer[] actualRefId = new Integer[arr.length];
+						for(int j=0; j<arr.length; j++){
+							actualRefId[j] = Integer.parseInt(arr[j]);
 						}
+						recoIDS =  ev.ref.rankPapers(context, arr);
 						ev.evaluate(recoIDS, actualRefId);
 						ev.updateMetrics();
 					} catch (Exception e) {
-						//e.printStackTrace();
+						e.printStackTrace();
 					}
 				}
 				
@@ -127,7 +125,9 @@ public class Evaluation extends Config{
 		}
 		totalRuns++;
 	}
-	public void reportAvgMetrics() {		
+	public void reportAvgMetrics() throws IOException {	
+		PrintWriter writer = new PrintWriter(new FileWriter(DATASET_DIR + CITATION_RECOMMENDATION_REPORT, true));;
+	writer.println("~~~~~~~~~~~~~~~~~~~~~~~~~~ Average metrics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		for(int k=0; k<5; k++){
 			System.out.println("Avg precision for "+LOOKUP[k]+" recommendations: "+avgPrecision[k]/totalQueries);
 			System.out.println("Avg recall for "+LOOKUP[k]+" recommendations: "+avgRecall[k]/totalQueries);
@@ -135,6 +135,15 @@ public class Evaluation extends Config{
 			System.out.println("Avg avgBpRef for "+LOOKUP[k]+" recommendations: "+avgBpRef[k]/totalQueries);
 			System.out.println("Avg avgReciprocalRank for "+LOOKUP[k]+" recommendations: "+avgReciprocalRank[k]/totalQueries);
 			System.out.println("Avg avgMRR for "+LOOKUP[k]+" recommendations: "+avgMRR[k]/totalQueries);
+			
+			
+			writer.println("Avg precision for "+LOOKUP[k]+" recommendations: "+avgPrecision[k]/totalQueries);
+			writer.println("Avg recall for "+LOOKUP[k]+" recommendations: "+avgRecall[k]/totalQueries);
+			writer.println("Avg fmeasure for "+LOOKUP[k]+" recommendations: "+avgFMeasure[k]/totalQueries);
+			writer.println("Avg avgBpRef for "+LOOKUP[k]+" recommendations: "+avgBpRef[k]/totalQueries);
+			writer.println("Avg avgReciprocalRank for "+LOOKUP[k]+" recommendations: "+avgReciprocalRank[k]/totalQueries);
+			writer.println("Avg avgMRR for "+LOOKUP[k]+" recommendations: "+avgMRR[k]/totalQueries);
+			
 		}
 	}
 	private void calcMRR() {
@@ -143,8 +152,8 @@ public class Evaluation extends Config{
 		}
 	}
 	public void evaluate(int[] recommRef, Integer[] actualRef){
-		rec = new HashSet<Integer>();
-		actual = new HashSet<Integer>(Arrays.asList(actualRef));
+		rec = new TreeSet<Integer>();
+		actual = new TreeSet<Integer>(Arrays.asList(actualRef));
 		//recArray = new int[recommRef.size()];
 		recArray = recommRef; actualArray = actualRef;
 		createLookupHash();	
@@ -191,7 +200,7 @@ public class Evaluation extends Config{
 		bpRef[numRec] = bPref(rec, actual);
 		if (firstRecIndex < lastIndexes[numRec]){
 			reciprocalRank[numRec] += 1/(double)firstRecIndex;
-		} 
+		}
 		rec.retainAll(actual);
 		correctRec = rec.size();
 		tempPrec = correctRec/i;

@@ -31,6 +31,8 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
 
+import com.google.common.collect.BiMap;
+
 /**
  * 
  */
@@ -46,14 +48,14 @@ public class RefRec extends Config{
 	ContextFreq[] contextFreq;
 	final TTable table;
 	double[] prob = new double[1200000];
+	private BiMap<String, Integer> titlesMap;
 	HashMap<String, Integer> queryTokens = new HashMap<>();
 	HashMap<String,Integer> wordsToID = new HashMap<>();	
-	ArrayList<ArrayList<Integer>> citingLikelihood = new ArrayList<ArrayList<Integer>>();
+	ArrayList<ArrayList<Integer>> citingLikelihood;
 	ArrayList<String> titleList;
 	double[] buckets = new double[]{1,0.1,0.001};//,0.0001,0.00001};
 	int[] recommendedIds = new int[MAX_RECOM];
 	String[] recommendations = new String[MAX_RECOM];
-	public static final int MAX_RECOM = 100;
 	int[] titleVCBMap;
 	PatternMatch preprocessor = new PatternMatch();
 	
@@ -73,12 +75,9 @@ public class RefRec extends Config{
 			else{
 				storeDataStruct(BAG_OF_WORDS_VCB);
 			}
-			for (int i = 0; i < buckets.length; i++) {
-				citingLikelihood.add(new ArrayList<Integer>());
-			}
-			//Thread ttableReader = new Thread(new Runn)
 			
 			titleList= readTitleList();
+			titlesMap = readTitlesBidiMap();
 			titleVCBMap = readVCBTitleBridge();
 			table = ttableFuture.get(); 
 		} catch (IOException | ClassNotFoundException | InterruptedException | ExecutionException e) {
@@ -86,30 +85,43 @@ public class RefRec extends Config{
 		}
 		
 	}
+	
+	void initializeCitingLikelihood()
+	{
+		citingLikelihood = new ArrayList<ArrayList<Integer>>();
+		for (int i = 0; i < buckets.length; i++) {
+			citingLikelihood.add(new ArrayList<Integer>());
+		}
+	}
 	/**
 	 * @param args
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws Exception {
 		RefRec ref = new RefRec();
-		String query = "myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
+		//String query = "myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
+		String query = "peer provide whole content network more recent work saroui confirm large amount free riding gnutella network well napster another interesting observation peer together provide more file than all other remain peer ramaswamy liu concentrate how prevent free riding";
 		ref.rankPapers(query);
+		ref.service.shutdown();
 	}
 
 	public int[] rankPapers(String query) throws ClassNotFoundException, IOException {
-		System.out.println("Recommending papers");
-		PrintWriter printer = new PrintWriter(new FileWriter(DATASET_DIR + "Citation Recommendation report.txt"));
-		preprocessor.preProcessQuery(query);
-		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
-		TokenStream tokenStream = analyzer.tokenStream("query", new StringReader(preprocessor.otherPOSBuffer.toString()));
-		CharTermAttribute token = tokenStream.getAttribute(CharTermAttribute.class);
-		List<String> tokenList = new ArrayList<>();
-		tokenList.addAll(Arrays.asList(preprocessor.properNounBuffer.toString().split(" ")));
-		while(tokenStream.incrementToken()){
-			tokenList.add(token.toString());
+		return rankPapers(query, null);
+	}
+	
+	public int[] rankPapers(String query, String[] actualRef) throws ClassNotFoundException, IOException {
+		System.out.println("Query: " + query);
+		printer = new PrintWriter(new FileWriter(DATASET_DIR + CITATION_RECOMMENDATION_REPORT, true));
+		if(actualRef != null)
+		{
+			printer.println("Actual references: " + Arrays.toString(actualRef));
 		}
-		
-		for (String word : tokenList) {
+		initializeCitingLikelihood();
+		Arrays.fill(prob, 0.0);
+		List<String> tokens = PatternMatch.KStemQuery(query);
+		printCleanedQuery(tokens);
+		queryTokens.clear();
+		for (String word : tokens) {
 			Integer occurrences;
 			if ((occurrences = queryTokens.get(word)) == null) {
 				queryTokens.put(word, 1);
@@ -120,36 +132,43 @@ public class RefRec extends Config{
 		
 		Long currTime = System.currentTimeMillis();
 		Set<String> queryTokenSet = queryTokens.keySet();
+		
 		for(int paper : table.titles){
 			for(String word : queryTokenSet){
 				Integer wordID = wordsToID.get(word);
 				if(wordID != null){
-					double tValue = table.getTValue(wordID, paper);
+					double tValue = table.getTValue(wordID, titleVCBMap[paper]);
 					int termFreq = queryTokens.get(word);
 					double icf = (contextFreq[wordID].icf);
 					double TF_ICF = termFreq*icf;
-					prob[paper] += tValue*TF_ICF;
+					prob[titleVCBMap[paper]] += tValue*TF_ICF;
 					//System.out.println("TF-ICF of " + word + " = "+TF_ICF);
 				}
 			}
 			bucket(paper, prob[paper]);			
 		}
-		 int[] recoIDS1 = new int[MAX_RECOM];
+		int[] recoIDS1 = new int[MAX_RECOM];
 		recommend();
 		
-		printer.println("Time for "+table.titles.size()+" paper= "+
-		(System.currentTimeMillis()-currTime));
-		
-		printer.println("Recommendations: IDs");
+		if (DEBUG) {
+			printer.println("Time for " + table.titles.size() + " paper= "
+					+ (System.currentTimeMillis() - currTime));
+			printer.println("Query: " + query);
+			printer.println("Recommendations: IDs");
+		}
 		for (int i = 0; i < MAX_RECOM; i++) {
 			recoIDS1[i] = recommendedIds[i];
-			printer.print(recommendedIds[i] + " ");
+			if (DEBUG) {
+				printer.print(recommendedIds[i] + " ");
+			}
 		}
 		printer.println("");
 		for (int i = 0; i < MAX_RECOM; i++) {
-			printer.println(i + ". " + recommendations[i]+": "+prob[recommendedIds[i]]);
-		}
-		printer.close();		
+			if (DEBUG) {
+				printer.println(i + ". " + recommendations[i] + ": "
+						+ prob[recommendedIds[i]]);
+			}
+		}		printer.close();
 		return recoIDS1;
 	}
 	
@@ -158,19 +177,28 @@ public class RefRec extends Config{
 		Comparator<Integer> paperComparator = new Comparator<Integer>() {
 			@Override
 			public int compare(Integer o1, Integer o2) {
-				return  (int)Math.round((prob[o2]-prob[o1])/buckets[buckets.length - 1]);
+				//return  (int)Math.round((prob[o2]-prob[o1])/buckets[buckets.length - 1]);
+				if(prob[o2] > prob[o1])
+				{
+					return 1;
+				}
+				else if(prob[o2] > prob[o1]){
+					return -1;
+				}
+ 				return 0;
 			}
 		};
-		int numRec = 0;
+		int rank = 0;
 		for (int i = 0; i < buckets.length; i++) {
 			ArrayList<Integer > curList = citingLikelihood.get(i);
 			//Sort in descending order
 			Collections.sort(curList,paperComparator);
-			for(int j =0;j<curList.size(); j++){
-				recommendedIds[numRec] = curList.get(j);
-				recommendations[numRec] = titleList.get(titleVCBMap[curList.get(j)]);
-				numRec++;
-				if(numRec>MAX_RECOM-1)
+			for(int id : curList){
+				recommendedIds[rank] = id;
+				//TODO check the title string obtained
+				recommendations[rank] = titlesMap.inverse().get(id);
+				rank++;
+				if(rank > MAX_RECOM-1)
 					return;
 			}
 		}
@@ -192,7 +220,7 @@ public class RefRec extends Config{
 		int index, freq; 
 		int count = 0, percent =0;
 		double icf;
-		BufferedReader r = new BufferedReader(new FileReader(fileName));
+		BufferedReader r = new BufferedReader(new FileReader(fileName.trim()));
 		while ((temp = r.readLine())!=null) {
 			arr = temp.split(" ");
 			index = Integer.parseInt(arr[0]);
@@ -238,6 +266,10 @@ public class RefRec extends Config{
 				{
 					@Override
 					public TTable call() throws Exception {
+						File f = new File(TRANSLATION_TABLE_SER);
+						if (!f.exists()) {
+							return new TTable();
+						}
 						return (TTable)new ObjectInputStream(new FileInputStream(TRANSLATION_TABLE_SER)).readObject();
 				}
 		});
@@ -245,10 +277,20 @@ public class RefRec extends Config{
 	}
 	
 	ArrayList<String> readTitleList() throws ClassNotFoundException, IOException{
-		System.out.println("Deserializing title list, Time: " + (System.currentTimeMillis() - START_TIME));
-		return (ArrayList<String>)new ObjectInputStream(new FileInputStream(TITLE_LIST)).readObject();
+		try {
+			System.out.println("Deserializing title list, Time: " + (System.currentTimeMillis() - START_TIME));
+			return (ArrayList<String>)new ObjectInputStream(new FileInputStream(TITLE_LIST)).readObject();
+		} catch (FileNotFoundException e) {
+			new CitationsGen();
+			return (ArrayList<String>)new ObjectInputStream(new FileInputStream(TITLE_LIST)).readObject();
+		}
 	}
 	
+	BiMap<String, Integer> readTitlesBidiMap() throws ClassNotFoundException, IOException{
+		System.out.println("Deserializing titles map, Time: " + (System.currentTimeMillis() - START_TIME));
+		return (BiMap<String, Integer>)new ObjectInputStream(new FileInputStream(TITLE2ID)).readObject();
+
+	}
 	int[] readVCBTitleBridge() throws ClassNotFoundException, IOException{
 		
 		File f = new File(CITED_PAPERS_VCB);
@@ -257,7 +299,7 @@ public class RefRec extends Config{
 			String s;
 			String[] spl;
 			//To remove null
-			r.readLine();
+			//r.readLine();
 			titleVCBMap = new int[totalTitles + 100];
 			while ((s = r.readLine()) != null) {
 				spl = s.split(" ");
@@ -280,7 +322,6 @@ public class RefRec extends Config{
 	}
 	
 	
-	
 	void testQueryTokenization() throws IOException{
 		String query = "myopia affects approximately 25% of adult Americans[2]. Ethnic div-=-ersity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
 		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
@@ -291,4 +332,18 @@ public class RefRec extends Config{
 			System.out.println(token.toString());
 		}
 	}	
+	
+	static void printCleanedQuery(List<String> list)
+	{
+		logger.print("Cleaned Query:");
+		for(String s : list)
+		{
+			logger.print(" ");
+			logger.print(s);
+		}
+		logger.println("");
+	}
+	
+	static PrintWriter logger = new PrintWriter(System.out);
+	PrintWriter printer;
 }
