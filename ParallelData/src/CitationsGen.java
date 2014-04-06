@@ -41,7 +41,6 @@ public class CitationsGen extends Config {
 				titleWriter = new PrintWriter(new FileWriter(titleWriterFile));
 				System.out.println("Creating cited papers at:" + DATASET_DIR
 						+ CITED_PAPERS_FILENAME);
-				generate();
 			}
 
 		} catch (ClassNotFoundException | IOException e) {
@@ -55,6 +54,7 @@ public class CitationsGen extends Config {
 	 */
 	public static void main(String[] args) throws Exception {
 		CitationsGen cit = new CitationsGen();
+		cit.generate();
 
 	}
 
@@ -62,44 +62,28 @@ public class CitationsGen extends Config {
 		int numCitation = 1;
 		String curPaperId;
 		String previousId = "", title;
-		int tenPercentLineCount = TOTAL_LINES_IN_DATASET / 10;
+		int tenPercentLineCount = 2500;//TOTAL_LINES_IN_DATASET / 10;
 
-		// System.out.println(idReader.readLine() + " : " +
-		// titleReader.readLine()); // read the column name
 		long startTime = 0, endTime = 0;
 		startTime = System.currentTimeMillis();
 		int percentage = 0;
-		while ((curPaperId = idReader.readLine()) != null) {
+		while ((curPaperId = idReader.readLine()) != null && (title = titleReader.readLine())!=null) {
 			numCitation++;
+			Integer citedPaperId = titlesMap.get(title);
 
-			if (0 == numCitation % tenPercentLineCount) {
+			if (0 == numCitation % tenPercentLineCount) 
+			{
 				endTime = System.currentTimeMillis();
-				System.out.println("Time taken for " + (++percentage) + "% = "
-						+ ((endTime - startTime) / 1000));
+				System.out.println("Time taken for " + (++percentage) + "% = " + ((endTime - startTime) / 1000));
 				// break;
 			}
-			if (curPaperId.equals(previousId)) {
-				// Read one citation context and get bag of words
-				// Read corresponding paper title, fetch corresponding ID
-				title = titleReader.readLine();
-				Integer citedPaperId = titlesMap.get(title);
-				if (citedPaperId == null) {
-					System.out.println(title);
-				}
-				citedPaperIds.add(citedPaperId);
-			} else {
-				if (citedPaperIds.size() != 0) {
-					// write bagsOfWords to a file
-					// write citedPaperIds to a file
-					writeToFile();
-				}
+			if (!curPaperId.equals(previousId) && numCitation>2) 
+			{
+				writeToFile();
 				// Initialize Sets to read the new Paper citations
 				citedPaperIds.clear();
-				// Read corresponding paper title, fetch corresponding ID
-				title = titleReader.readLine();
-				int citedPaperId = titlesMap.get(title);
-				citedPaperIds.add(citedPaperId);
 			}
+			citedPaperIds.add(citedPaperId);
 			previousId = curPaperId;
 		}
 
@@ -109,8 +93,9 @@ public class CitationsGen extends Config {
 			// write citedPaperIds to a file
 			writeToFile();
 		}
-		titleWriter.close();
-
+		if (titleWriter != null) {
+			titleWriter.close();
+		}
 	}
 
 	private void writeToFile() {
@@ -120,7 +105,9 @@ public class CitationsGen extends Config {
 			Integer nextCited = it2.next();
 			write = write + " " + nextCited;
 		}
-		titleWriter.println(write);
+		if (titleWriter != null) {
+			titleWriter.println(write);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -139,6 +126,7 @@ public class CitationsGen extends Config {
 
 	@SuppressWarnings({ "unchecked", "resource" })
 	private void storeMap(File mapFile) throws IOException, ClassNotFoundException {
+		PrintWriter writer = new PrintWriter(TITLE2ID_TXT);
 		titlesMap = HashBiMap.create(240000);
 		String title = null;
 		int count = 1;
@@ -147,6 +135,7 @@ public class CitationsGen extends Config {
 			if (titlesMap.get(title) == null) {
 				count++;
 				titlesMap.put(title, count);
+				writer.println(title + ": " + count);
 				titleList.add(title);
 			}
 		}

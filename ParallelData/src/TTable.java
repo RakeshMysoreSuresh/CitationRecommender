@@ -24,7 +24,7 @@ public class TTable extends Config implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -9002172753555230584L;
-	ArrayList<HashMap<Integer, Double>> table;
+	ArrayList<HashMap<Integer, Float>> table;
 	HashSet<Integer> titles = new HashSet<>();
 
 	public TTable()
@@ -67,24 +67,27 @@ public class TTable extends Config implements Serializable{
 		File ttFile = new File(TRANSLATION_TABLE_SER);
 		if(!ttFile.exists())
 		{
-			TTable.compressTTable(TRANSLATION_TABLE_TXT);
-			String fileName = TRANSLATION_TABLE_TXT + (TTABLE_COMPRESSION ? TTABLE_COMPRESSED_SUFFIX : "");
-			
-			BufferedReader r = new BufferedReader(new FileReader(fileName));
-			int numWords = findNum(BAG_OF_WORDS_VCB);
-			table = new ArrayList<HashMap<Integer, Double>>(numWords);
-			for(int i=0; i<numWords+100; i++){
-				table.add(new HashMap<Integer, Double>(30));
+			String ttableTxtFilename = TRANSLATION_TABLE_TXT + (TTABLE_COMPRESSION ? TTABLE_COMPRESSED_SUFFIX : "");
+			File ttableTxtFile = new File(ttableTxtFilename);
+			if (TTABLE_COMPRESSION && !ttableTxtFile.exists()) {
+				TTable.compressTTable(TRANSLATION_TABLE_TXT);
 			}
+			BufferedReader r = new BufferedReader(new FileReader(ttableTxtFilename));
+			int numWords = findNum(BAG_OF_WORDS_VCB);
+			table = new ArrayList<HashMap<Integer, Float>>(numWords);
+			for(int i=0; i<numWords+100; i++){
+				table.add(new HashMap<Integer, Float>(30));
+			}
+			System.out.println("Created hash maps required for TTable object");
 			String s;
 			String[] spl;
-			HashMap<Integer, Double> currWordMap = null;
+			HashMap<Integer, Float> currWordMap = null;
 			int prevWordId = -1;
 			while((s = r.readLine())!=null){
 				spl = s.split(" ");
 				int wordId = Integer.parseInt(spl[0]);
 				Integer titleId = Integer.parseInt(spl[1]);
-				Double tValue = Double.parseDouble(spl[2]);
+				Float tValue = Float.parseFloat(spl[2]);
 				if(wordId != prevWordId){
 					currWordMap = table.get(wordId);			
 				}
@@ -101,7 +104,7 @@ public class TTable extends Config implements Serializable{
 	}
 	
 	double getTValue(int wordId, int paperId){
-		Double val = table.get(wordId).get(paperId);
+		Float val = table.get(wordId).get(paperId);
 		if(val == null){
 			return 0.0;
 		}
@@ -113,8 +116,8 @@ public class TTable extends Config implements Serializable{
 		PrintWriter w = new PrintWriter(new File(path+"_compressed"));
 		String entry;
 		while((entry = r.readLine())!=null){
-			double value = Double.parseDouble(entry.split(" ")[2]); 
-			if(value > 0.0005){
+			double value = Float.parseFloat(entry.split(" ")[2]); 
+			if(value > TVALUE_COMPRESSION_THRESHOLD){
 				w.println(entry);
 			}
 		}

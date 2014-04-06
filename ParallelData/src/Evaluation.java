@@ -65,55 +65,60 @@ public class Evaluation extends Config{
 		BufferedReader idReader = new BufferedReader(new FileReader(ID));
 		BufferedReader	contextReader = new BufferedReader(new FileReader(CONTEXT));
 		BufferedReader	actualRefReader = new BufferedReader(new FileReader(DATASET_DIR + CITED_PAPERS_FILENAME));
+		BufferedReader	bowReader = new BufferedReader(new FileReader(DATASET_DIR + BAG_OF_WORDS_FILENAME));
 		// Sample citation context
 		//"myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
 		//---------------------------------------------
 			 
-			 String curPaperId, context,actualRef=null;
-				String previousId = "";
-				
-			  //Dummy reads
-			  //idReader.readLine();
-			  //contextReader.readLine();
-			  int i = 0;
-			  //Read File Line By Line
-			  while (true){
-				//(readLine = contextReader.readLine()) != null
-				curPaperId = idReader.readLine(); // read the column name
-				context = contextReader.readLine(); // read the column name
-
-				{if(curPaperId == null | context ==null)
-					break;
-				}
-				if (!curPaperId.equals(previousId)) {
-					// Read one citation context and get bag of words
-					actualRef = actualRefReader.readLine();		
-				}
-				
-				if (i%1000 == 0) {
-			    //if (i < 10) {
-					try {
-						int[] recoIDS;
-						String[] arr = actualRef.split(" ");
+		String curPaperId, context,actualRef=null;
+		String previousId = "";	
+		String bagOfWords = null;
+		int i = 0;
+		int citedPaperIndex = 0;
+		
+		//Read File Line By Line
+		while (((curPaperId = idReader.readLine()) != null) &&   ((context = contextReader.readLine()) != null) && citedPaperIndex < 7000) {
+			if (!curPaperId.equals(previousId)) // TODO i
+			{
+				actualRef = actualRefReader.readLine();
+				bagOfWords = bowReader.readLine();
+				citedPaperIndex++;
+			} 
+			int percent = 0;
+			if (i % 1000 == 0) 
+			{
+				try 
+				{
+					int[] recoIDS;
+					String[] arr = actualRef.split(" ");
+					if (arr.length > 5) {
 						Integer[] actualRefId = new Integer[arr.length];
-						for(int j=0; j<arr.length; j++){
+						for (int j = 0; j < arr.length; j++) {
 							actualRefId[j] = Integer.parseInt(arr[j]);
 						}
-						recoIDS =  ev.ref.rankPapers(context, arr);
-						ev.evaluate(recoIDS, actualRefId);
-						ev.updateMetrics();
-					} catch (Exception e) {
-						e.printStackTrace();
+						recoIDS = ev.ref.rankPapers(context, arr);
+						if(recoIDS != null)
+						{
+							ev.evaluate(recoIDS, actualRefId);
+							ev.updateMetrics();
+							ev.reportMetrics();
+						}
+						else
+						{
+							System.out.println("Ignoring query due low confidence:\n\t\t"+context);
+						}
 					}
-				}
-				
-				previousId = curPaperId;
-				i++;
-			  }
-			  ev.reportAvgMetrics();
-		//-------------------------------
-			
+				} catch (IOException e) {	e.printStackTrace(); }
+				//System.out.println("Completed "+(percent++)+"%");
+			}
+			previousId = curPaperId;
+			i++;
+		}
+		ev.reportAvgMetrics();
+		RefRec.service.shutdown();
+	//-------------------------------
 	}
+	
 	public void updateMetrics() {
 		for(int k=0; k<5; k++){
 			avgPrecision[k] += precision[k];
@@ -125,9 +130,26 @@ public class Evaluation extends Config{
 		}
 		totalRuns++;
 	}
+	
+	public void reportMetrics() throws IOException {	
+//		ref.printer.println("precision for "+LOOKUP[0]+" recommendations: "+precision[0]);
+		ref.printer.println("recall for "+LOOKUP[1]+" recommendations: "+recall[0]);
+		ref.printer.println("fmeasure for "+LOOKUP[1]+" recommendations: "+fMeasure[0]);
+//		ref.printer.println("avgBpRef for "+LOOKUP[0]+" recommendations: "+bpRef[0]);
+//		ref.printer.println("avgReciprocalRank for "+LOOKUP[0]+" recommendations: "+reciprocalRank[0]);
+//		ref.printer.println("avgMRR for "+LOOKUP[0]+" recommendations: "+mRR[0]);
+		
+		//System.out.println("precision for "+LOOKUP[0]+" recommendations: "+precision[0]);
+		//System.out.println("recall for "+LOOKUP[0]+" recommendations: "+recall[0]);
+		System.out.println("fmeasure for "+LOOKUP[1]+" recommendations: "+fMeasure[0]);
+		//System.out.println("avgBpRef for "+LOOKUP[0]+" recommendations: "+bpRef[0]);
+		//System.out.println("avgReciprocalRank for "+LOOKUP[0]+" recommendations: "+reciprocalRank[0]);
+		//System.out.println("avgMRR for "+LOOKUP[0]+" recommendations: "+mRR[0]);
+	}
+	
 	public void reportAvgMetrics() throws IOException {	
 		PrintWriter writer = new PrintWriter(new FileWriter(DATASET_DIR + CITATION_RECOMMENDATION_REPORT, true));;
-	writer.println("~~~~~~~~~~~~~~~~~~~~~~~~~~ Average metrics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		writer.println("~~~~~~~~~~~~~~~~~~~~~~~~~~ Average metrics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		for(int k=0; k<5; k++){
 			System.out.println("Avg precision for "+LOOKUP[k]+" recommendations: "+avgPrecision[k]/totalQueries);
 			System.out.println("Avg recall for "+LOOKUP[k]+" recommendations: "+avgRecall[k]/totalQueries);
@@ -146,6 +168,7 @@ public class Evaluation extends Config{
 			
 		}
 	}
+	
 	private void calcMRR() {
 		for (int i = 0; i < mRR.length; i++) {
 			mRR[i] = reciprocalRank[i] / totalQueries;
@@ -195,6 +218,7 @@ public class Evaluation extends Config{
 		}
 	}
 	public void calculate(int i, final int numRec) {
+		//TODO bug : rec clears after calculated, BPref problem
 		double tempPrec;
 		double tempRec;
 		bpRef[numRec] = bPref(rec, actual);
@@ -203,13 +227,12 @@ public class Evaluation extends Config{
 		}
 		rec.retainAll(actual);
 		correctRec = rec.size();
-		tempPrec = correctRec/i;
-		tempRec = correctRec/actual.size();
+		tempPrec = correctRec/(i+1);
+		tempRec = correctRec/Math.min(i+1, actual.size());
 		precision[numRec] = tempPrec;
 		recall[numRec] = tempRec;
-		if (tempPrec + tempRec >0) {
-			fMeasure[numRec] = (2.0 * tempPrec * tempRec)
-					/ (tempPrec + tempRec);
+		if (tempPrec + tempRec > 0) {
+			fMeasure[numRec] = (2.0 * tempPrec * tempRec) / (tempPrec + tempRec);
 		}	
 		else{
 			fMeasure[numRec] = 0;

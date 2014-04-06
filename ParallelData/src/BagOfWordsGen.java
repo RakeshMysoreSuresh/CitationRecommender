@@ -2,7 +2,6 @@
  *
  */
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,7 +11,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseTokenizer;
@@ -54,7 +52,9 @@ public class BagOfWordsGen extends Config{
 			contextReader = new BufferedReader(new FileReader(args[1]));
 			wordsWriter = new PrintWriter(new FileWriter(args[2]));
 			System.out.println("Creating bag of words at:" + args[2]);
-			readNoisyWords();
+			if (REMOVE_NOISY_WORDS) {
+				readNoisyWords();
+			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -77,7 +77,9 @@ public class BagOfWordsGen extends Config{
 
 	public static void main(String[] args) throws IOException {
 
-		stemContext();
+		//stemContext();
+		BagOfWordsGen bagOfWordsGen = new BagOfWordsGen(new String[] { ID, CONTEXT, DATASET_DIR +BAG_OF_WORDS_FILENAME });
+		bagOfWordsGen.generate();
 	}
 	/**
 	 * Gather all words from all citation contexts in a given citing paper and write into a line
@@ -101,54 +103,42 @@ public class BagOfWordsGen extends Config{
 			long startTime = 0, endTime = 0;
 			startTime = System.currentTimeMillis();
 			int percentage = 0;
-			while ((curPaperId = idReader.readLine()) != null) {
+			while ((curPaperId = idReader.readLine()) != null && (context = contextReader.readLine())!=null) 
+			{
 				numCitation++;
 
-				if (0 == numCitation % 12000) {
+				if (0 == numCitation % 12000) 
+				{
 					endTime = System.currentTimeMillis();
-					System.out.println("Time taken for " + (++percentage) + "% = "
-							+ ((endTime - startTime) / 1000));
+					System.out.println("Time taken for " + (++percentage) + "% = " + ((endTime - startTime) / 1000));
 					// break;
 				}
-				if (curPaperId.equals(previousId) || numCitation == 1) {
-
-					// Read one citation context and get bag of words
-					context = contextReader.readLine();
-					removeStopWordsStem(context);
-					if(!Config.AGGRESSIVE_STEMMING)
+				
+				if (!curPaperId.equals(previousId) && numCitation != 1) 
+				{
+					if (bagOfWords.size() != 0) 
 					{
-						removeStopWordsStem(context);
-					}
-					else
-					{
-						aggresivelyStem(context);
-					}
-
-				} else {
-					if (bagOfWords.size() != 0) {
 						// write bagsOfWords to a file
 						// write citedPaperIds to a file
 						writeToFile(bagOfWords, wordsWriter);
 					}
-
-					// Read one citation context and get bag of words
-					context = contextReader.readLine();
 					// Initialize Sets to read the new Paper citations
 					bagOfWords.clear();
-
-					if(Config.MINIMAL_STEMMING)
-					{
-						removeStopWordsStem(context);
-					}
-					else if(Config.AGGRESSIVE_STEMMING)
-					{
-						aggresivelyStem(context);
-					}
-					if (properNounReader != null) {
-						noun = properNounReader.readLine();
-						bagOfWords.addAll(Arrays.asList(noun.split(" ")));
-					}
 				}
+				
+				if(Config.AGGRESSIVE_STEMMING)
+				{
+					aggresivelyStem(context);
+				}
+				else if (Config.MINIMAL_STEMMING)
+				{
+					removeStopWordsStem(context);
+				}
+				else
+				{
+					bagOfWords.addAll(Arrays.asList(context.split(" ")));
+				}
+				
 				previousId = curPaperId;
 			}
 

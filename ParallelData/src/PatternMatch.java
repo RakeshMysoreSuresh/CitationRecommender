@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseTokenizer;
+import org.apache.lucene.analysis.PorterStemFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.KStemFilter;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -269,6 +270,44 @@ public class PatternMatch extends Config{
 			TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(s));
 			// retrieve the remaining tokens
 			TokenStream stemFilter = new KStemFilter(tokenStream);
+			CharTermAttribute token = stemFilter.getAttribute(CharTermAttribute.class);
+			
+			List<String> tokens = new ArrayList<>(s.length());
+			while (stemFilter.incrementToken()) {
+				String word = token.toString();
+				if (word.length() > 2 && word.length() < 30 ) {
+					/*if(BagOfWordsGen.noisyWordSet == null){
+						tokens.add(word);
+					}
+					else
+					{
+						if(!BagOfWordsGen.noisyWordSet.contains(word))
+						{
+							tokens.add(word);
+						}
+					}*/
+					tokens.add(word);
+				}
+			}
+			if(tokens.size() > 5)
+			{
+				return tokens;
+			}
+		}
+		return null;
+		
+	}
+	
+	public static List<String> PorterStemQuery(String s) throws IOException {
+		
+		int firstDelimiterIndex = s.indexOf(' '); int lastDelimiterIndex  = s.lastIndexOf(' ');
+		if(firstDelimiterIndex > -1 && lastDelimiterIndex > -1)
+		{
+			Version matchVersion = Version.LUCENE_35; // Substitute desired Lucene version
+			Analyzer analyzer = new StandardAnalyzer(matchVersion); // or any other analyzer
+			TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(s));
+			// retrieve the remaining tokens
+			TokenStream stemFilter = new PorterStemFilter(tokenStream);
 			CharTermAttribute token = stemFilter.getAttribute(CharTermAttribute.class);
 			
 			List<String> tokens = new ArrayList<>(s.length());

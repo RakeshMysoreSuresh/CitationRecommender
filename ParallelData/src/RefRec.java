@@ -10,12 +10,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.sql.Ref;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -26,7 +27,6 @@ import java.util.concurrent.Future;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.util.Version;
@@ -63,10 +63,20 @@ public class RefRec extends Config{
 	static final int totalWords = TTable.findNum(BAG_OF_WORDS_VCB); 
 	static final int totalTitles = TTable.findNum(CITED_PAPERS_VCB);
 			
+	{
+		try {
+			printer = new PrintWriter(new FileWriter(DATASET_DIR + CITATION_RECOMMENDATION_REPORT, true));
+			inaccurateprinter = new PrintWriter(new FileWriter(DATASET_DIR + CITATION_RECOMMENDATION_REPORT+"inaccurates", true));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}//(System.out);//
+	}
 	public RefRec(){
 		try {
 			//testQueryTokenization();
-			Future<TTable> ttableFuture = readTTable();
+			Future<TTable> ttableFuture = readTTableFuture();
+			//table = ttableFuture.get();
+			//table = readTTable();
 			File cf = new File(ICF_ARRAY);
 			if (cf.exists()) {
 				contextFreq = readICF();
@@ -75,10 +85,11 @@ public class RefRec extends Config{
 			else{
 				storeDataStruct(BAG_OF_WORDS_VCB);
 			}
-			
+			CitationsGen cit = new CitationsGen();
 			titleList= readTitleList();
 			titlesMap = readTitlesBidiMap();
-			titleVCBMap = readVCBTitleBridge();
+			//No longer needed as title ids match ids in vcb file
+			//titleVCBMap = readVCBTitleBridge();
 			table = ttableFuture.get(); 
 		} catch (IOException | ClassNotFoundException | InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
@@ -98,10 +109,17 @@ public class RefRec extends Config{
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws Exception {
-		RefRec ref = new RefRec();
-		//String query = "myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
-		String query = "peer provide whole content network more recent work saroui confirm large amount free riding gnutella network well napster another interesting observation peer together provide more file than all other remain peer ramaswamy liu concentrate how prevent free riding";
-		ref.rankPapers(query);
+		RefRec ref = new RefRec();;
+		try {
+			//String query = "myopia affects approximately 25% of adult Americans[2]. Ethnic diversity appears to distinguish different groups with regard to prevalence. Caucasians have a higher prevalence than African Americans=-=[3]-=-. Asian populations have the highest prevalence rates with reports ranging from 50-90%[1, 4-5]. Jewish Caucasians, one of the target populations of the present study, have consistently demonstrated a ";
+			//String query = "colleague use mixed method study prostate cancer screening treatment choice determine why study recruit lower than expect rousseau eccle colleague use qualitative method case interview explain limited use computerize guidelines asthma angina primary care study done united kingdom many other example exist";
+			//String query = "moreover consist exactly all node one index say full following theorem describe basic property equation gadget proof can found theorem let one following gadget corresponding equation let independent set each";
+			String query = "semantic numerical simple tense product univariate spline use basis function general restricted least square problem has been thorough studied consider first univariate case monotony function represent well known spline form partition unity case second order spline";
+			ref.rankPapers(query);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		ref.service.shutdown();
 	}
 
@@ -110,8 +128,7 @@ public class RefRec extends Config{
 	}
 	
 	public int[] rankPapers(String query, String[] actualRef) throws ClassNotFoundException, IOException {
-		System.out.println("Query: " + query);
-		printer = new PrintWriter(new FileWriter(DATASET_DIR + CITATION_RECOMMENDATION_REPORT, true));
+		//logger.println("Query: " + query);
 		if(actualRef != null)
 		{
 			printer.println("Actual references: " + Arrays.toString(actualRef));
@@ -119,7 +136,8 @@ public class RefRec extends Config{
 		initializeCitingLikelihood();
 		Arrays.fill(prob, 0.0);
 		List<String> tokens = PatternMatch.KStemQuery(query);
-		printCleanedQuery(tokens);
+		//List<String> tokens = PatternMatch.PorterStemQuery(query);
+		//printCleanedQuery(tokens);
 		queryTokens.clear();
 		for (String word : tokens) {
 			Integer occurrences;
@@ -137,17 +155,22 @@ public class RefRec extends Config{
 			for(String word : queryTokenSet){
 				Integer wordID = wordsToID.get(word);
 				if(wordID != null){
-					double tValue = table.getTValue(wordID, titleVCBMap[paper]);
+					double tValue = table.getTValue(wordID, paper);
 					int termFreq = queryTokens.get(word);
 					double icf = (contextFreq[wordID].icf);
 					double TF_ICF = termFreq*icf;
-					prob[titleVCBMap[paper]] += tValue*TF_ICF;
+/*					if (tValue > 0.5) {
+						//prob[titleVCBMap[paper]] += 1;
+						System.out.println("Ignoring wordId for excessive tvalue "+wordID);
+						continue;
+					}*/
+					prob[paper] += tValue*TF_ICF;
 					//System.out.println("TF-ICF of " + word + " = "+TF_ICF);
 				}
 			}
-			bucket(paper, prob[paper]);			
+			bucket(paper, prob[paper]);
 		}
-		int[] recoIDS1 = new int[MAX_RECOM];
+		int[] recoIDS = new int[MAX_RECOM];
 		recommend();
 		
 		if (DEBUG) {
@@ -157,7 +180,7 @@ public class RefRec extends Config{
 			printer.println("Recommendations: IDs");
 		}
 		for (int i = 0; i < MAX_RECOM; i++) {
-			recoIDS1[i] = recommendedIds[i];
+			recoIDS[i] = recommendedIds[i];
 			if (DEBUG) {
 				printer.print(recommendedIds[i] + " ");
 			}
@@ -168,8 +191,41 @@ public class RefRec extends Config{
 				printer.println(i + ". " + recommendations[i] + ": "
 						+ prob[recommendedIds[i]]);
 			}
-		}		printer.close();
-		return recoIDS1;
+		}		
+		if (actualRef!=null) {
+			HashSet<Integer> actual = new HashSet<>();
+			for (String s : actualRef) {
+				actual.add(Integer.parseInt(s));
+			}
+			HashSet recommended = new HashSet<>();
+			for (int i : recoIDS) {
+				recommended.add(i);
+			}
+			recommended.retainAll(actual);
+			if (recommended.size() < actual.size() >> 1) {
+				if (DEBUG) {
+					inaccurateprinter.println("Time for " + table.titles.size()
+							+ " paper= "
+							+ (System.currentTimeMillis() - currTime));
+					inaccurateprinter.println("Query: " + query);
+					inaccurateprinter.println("Recommendations: IDs");
+				}
+				for (int i = 0; i < MAX_RECOM; i++) {
+					recoIDS[i] = recommendedIds[i];
+					if (DEBUG) {
+						inaccurateprinter.print(recommendedIds[i] + " ");
+					}
+				}
+				inaccurateprinter.println("");
+				for (int i = 0; i < MAX_RECOM; i++) {
+					if (DEBUG) {
+						inaccurateprinter.println(i + ". " + recommendations[i]
+								+ ": " + prob[recommendedIds[i]]);
+					}
+				}
+			}
+		}
+		return (prob[recoIDS[0]]>MIN_CONFIDENCE) ? recoIDS : null;
 	}
 	
 	private void recommend() {
@@ -182,7 +238,7 @@ public class RefRec extends Config{
 				{
 					return 1;
 				}
-				else if(prob[o2] > prob[o1]){
+				else if(prob[o2] < prob[o1]){
 					return -1;
 				}
  				return 0;
@@ -202,7 +258,6 @@ public class RefRec extends Config{
 					return;
 			}
 		}
-		System.out.println("Done");
 	}
 	
 	private void bucket(int paper, double d) {
@@ -259,21 +314,25 @@ public class RefRec extends Config{
 		return (HashMap<String, Integer>)new ObjectInputStream(new FileInputStream(WORDS2ID_LIST)).readObject();
 	}
 	
-	Future<TTable> readTTable() throws ClassNotFoundException, IOException{
-		System.out.println("Deserializing translation table, Time: " + (System.currentTimeMillis() - START_TIME));
+	Future<TTable> readTTableFuture() throws ClassNotFoundException, IOException{
 		return service.submit(
-				new Callable<TTable>() 
-				{
-					@Override
-					public TTable call() throws Exception {
-						File f = new File(TRANSLATION_TABLE_SER);
-						if (!f.exists()) {
-							return new TTable();
-						}
-						return (TTable)new ObjectInputStream(new FileInputStream(TRANSLATION_TABLE_SER)).readObject();
+			new Callable<TTable>() 
+			{
+				@Override
+				public TTable call() throws Exception {
+					return readTTable();
 				}
-		});
+			});
 		
+	}
+	
+	public TTable readTTable() throws IOException, ClassNotFoundException {
+		System.out.println("Deserializing translation table, Time: " + (System.currentTimeMillis() - START_TIME));
+		File f = new File(TRANSLATION_TABLE_SER);
+		if (!f.exists()) {
+			return new TTable();
+		}
+		return (TTable)new ObjectInputStream(new FileInputStream(TRANSLATION_TABLE_SER)).readObject();
 	}
 	
 	ArrayList<String> readTitleList() throws ClassNotFoundException, IOException{
@@ -291,6 +350,8 @@ public class RefRec extends Config{
 		return (BiMap<String, Integer>)new ObjectInputStream(new FileInputStream(TITLE2ID)).readObject();
 
 	}
+	
+	//Not required as vcb file's wordIndex matches the word ID
 	int[] readVCBTitleBridge() throws ClassNotFoundException, IOException{
 		
 		File f = new File(CITED_PAPERS_VCB);
@@ -303,13 +364,11 @@ public class RefRec extends Config{
 			titleVCBMap = new int[totalTitles + 100];
 			while ((s = r.readLine()) != null) {
 				spl = s.split(" ");
-				int index = Integer.parseInt(spl[0]), val = Integer
-						.parseInt(spl[1]);
+				int index = Integer.parseInt(spl[0]), val = Integer.parseInt(spl[1]);
 				titleVCBMap[index] = val;
 			}
 			r.close();
-			ObjectOutputStream stream = new ObjectOutputStream(
-					new FileOutputStream(CITED_VCB_PAPER_ID_TO_TITLE_SER_MAP));
+			ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(CITED_VCB_PAPER_ID_TO_TITLE_SER_MAP));
 			stream.writeObject(titleVCBMap);
 			stream.close();
 			return titleVCBMap;
@@ -346,4 +405,5 @@ public class RefRec extends Config{
 	
 	static PrintWriter logger = new PrintWriter(System.out);
 	PrintWriter printer;
+	PrintWriter inaccurateprinter;
 }
